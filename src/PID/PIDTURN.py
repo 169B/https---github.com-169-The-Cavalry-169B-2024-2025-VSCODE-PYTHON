@@ -54,7 +54,7 @@ def pid_turn(target_angle, max_speed, timeout=3):
 def pid_turn(target_angle, max_speed, timeout=3):
     
     # PID gains
-    Kp = 0.07   # Proportional Gain
+    Kp = 0.1   # Proportional Gain
     Ki = 0 # Integral Gain
     Kd = 0   # Derivative Gain
 

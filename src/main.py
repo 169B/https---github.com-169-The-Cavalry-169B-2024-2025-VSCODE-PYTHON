@@ -190,7 +190,7 @@ def onauton_autonomous_0():
         sleep(50)
     stop_initialize.broadcast()
    
-    pid_turn(90, 70)
+    pid_turn(90, 30)
 
 
 
@@ -616,7 +616,7 @@ def pid_turn(target_angle, max_speed, timeout=3):
 def pid_turn(target_angle, max_speed, timeout=3):
     
     # PID gains
-    Kp = 0.07   # Proportional Gain
+    Kp = 0.1   # Proportional Gain
     Ki = 0 # Integral Gain
     Kd = 0   # Derivative Gain
 
