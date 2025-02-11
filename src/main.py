@@ -219,10 +219,23 @@ def onauton_autonomous_0():
     
 '''from MAIN_GB.main1 import *'''
 
-def onevent_controller_1axis2Changed_0():
+'''def onevent_controller_1axis2Changed_0():
     global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
     # CONTROLLER jOYSTICK
+    Right_Axis = controller_1.axis2.position()'''
+
+def onevent_controller_1axis2Changed_0():
+    global Right_Axis, dead_zone_range
+    dead_zone_range = 10  # Adjust this value to set the dead zone range
+
     Right_Axis = controller_1.axis2.position()
+
+    # Check if joystick is within dead zone
+    if abs(Right_Axis) <= dead_zone_range:
+        Right_Axis = 0  # Assign a value of 0 when joystick is within dead zone
+    else:
+        # Otherwise, use the joystick value
+        Right_Axis = Right_Axis
 
 def ondriver_drivercontrol_0():
     global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
@@ -240,10 +253,24 @@ def ondriver_drivercontrol_0():
             wait(5, MSEC)
         wait(5, MSEC)
 
-def onevent_controller_1axis3Changed_0():
+'''def onevent_controller_1axis3Changed_0():
     global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
     # CONTROLLER jOYSTICK
+    Left_Axis = controller_1.axis3.position()'''
+
+def onevent_controller_1axis3Changed_0():
+    global Left_Axis, dead_zone_range
+    dead_zone_range = 10  # Adjust this value to set the dead zone range
+
     Left_Axis = controller_1.axis3.position()
+
+    # Check if joystick is within dead zone
+    if abs(Left_Axis) <= dead_zone_range:
+        Left_Axis = 0  # Assign a value of 0 when joystick is within dead zone
+    else:
+        # Otherwise, use the joystick value
+        Left_Axis = Left_Axis
+
 
 def ondriver_drivercontrol_1():
     global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
@@ -589,9 +616,9 @@ def pid_turn(target_angle, max_speed, timeout=3):
 def pid_turn(target_angle, max_speed, timeout=3):
     
     # PID gains
-    Kp = 5   # Proportional Gain
-    Ki = 0.2 # Integral Gain
-    Kd = 3   # Derivative Gain
+    Kp = 0.07   # Proportional Gain
+    Ki = 0 # Integral Gain
+    Kd = 0   # Derivative Gain
 
     # Integral and derivative variables
     integral = 0
@@ -607,14 +634,14 @@ def pid_turn(target_angle, max_speed, timeout=3):
     try:
         Inertial21.set_heading(0, DEGREES)
     except Exception as e:
-        print(f"Error resetting IMU heading: {e}")
+        print("Error resetting IMU heading:")
 
     while True:
         # Get current heading
         try:
             current_angle = Inertial21.heading(DEGREES)
         except Exception as e:
-            print(f"Error getting current heading: {e}")
+            print("Error getting current heading:")
             break
 
         # Calculate error
@@ -640,7 +667,7 @@ def pid_turn(target_angle, max_speed, timeout=3):
             Left_Front.set_velocity(power, PERCENT)
             Right_front.set_velocity(power, PERCENT)
         except Exception as e:
-            print(f"Error setting motor velocity: {e}")
+            print("Error setting motor velocity:")
 
         try:
             LeftMotors.spin(FORWARD)
@@ -648,7 +675,7 @@ def pid_turn(target_angle, max_speed, timeout=3):
             Left_Front.spin(FORWARD)
             Right_front.spin(FORWARD)
         except Exception as e:
-            print(f"Error spinning motors: {e}")
+            print("Error spinning motors:")
 
     # Stop motors after turn
     try:
@@ -657,7 +684,7 @@ def pid_turn(target_angle, max_speed, timeout=3):
         Left_Front.stop()
         Right_front.stop()
     except Exception as e:
-        print(f"Error stopping motors: {e}")
+        print("Error stopping motors:")
 '''from MAIN_GB.main1 import *'''
 
 def turn_heading_velocity_momentum(turn_heading_velocity_momentum__heading, turn_heading_velocity_momentum__velocity, turn_heading_velocity_momentum__momentum):

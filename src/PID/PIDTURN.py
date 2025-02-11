@@ -54,9 +54,9 @@ def pid_turn(target_angle, max_speed, timeout=3):
 def pid_turn(target_angle, max_speed, timeout=3):
     
     # PID gains
-    Kp = 5   # Proportional Gain
-    Ki = 0.2 # Integral Gain
-    Kd = 3   # Derivative Gain
+    Kp = 0.07   # Proportional Gain
+    Ki = 0 # Integral Gain
+    Kd = 0   # Derivative Gain
 
     # Integral and derivative variables
     integral = 0
@@ -72,14 +72,14 @@ def pid_turn(target_angle, max_speed, timeout=3):
     try:
         Inertial21.set_heading(0, DEGREES)
     except Exception as e:
-        print(f"Error resetting IMU heading: {e}")
+        print("Error resetting IMU heading:")
 
     while True:
         # Get current heading
         try:
             current_angle = Inertial21.heading(DEGREES)
         except Exception as e:
-            print(f"Error getting current heading: {e}")
+            print("Error getting current heading:")
             break
 
         # Calculate error
@@ -105,7 +105,7 @@ def pid_turn(target_angle, max_speed, timeout=3):
             Left_Front.set_velocity(power, PERCENT)
             Right_front.set_velocity(power, PERCENT)
         except Exception as e:
-            print(f"Error setting motor velocity: {e}")
+            print("Error setting motor velocity:")
 
         try:
             LeftMotors.spin(FORWARD)
@@ -113,7 +113,7 @@ def pid_turn(target_angle, max_speed, timeout=3):
             Left_Front.spin(FORWARD)
             Right_front.spin(FORWARD)
         except Exception as e:
-            print(f"Error spinning motors: {e}")
+            print("Error spinning motors:")
 
     # Stop motors after turn
     try:
@@ -122,4 +122,4 @@ def pid_turn(target_angle, max_speed, timeout=3):
         Left_Front.stop()
         Right_front.stop()
     except Exception as e:
-        print(f"Error stopping motors: {e}")
+        print("Error stopping motors:")

@@ -13,7 +13,7 @@ def onauton_autonomous_0():
         sleep(50)
     stop_initialize.broadcast()
    
-    '''pid_turn(90, 70)'''
+    pid_turn(90, 70)
 
 
 
