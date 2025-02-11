@@ -1,0 +1,18 @@
+{
+	"extension": {
+		"version": "0.1.4",
+		"json": 2
+	},
+	"project": {
+		"name": "VexVSCodePython",
+		"description": "",
+		"creationDate": "09/02/2025, 19:07:53",
+		"platform": "V5",
+		"language": "python",
+		"slot": 5,
+		"sdkVersion": "V5_1_0_1_25",
+		"python": {
+			"main": "src/main.py"
+		}
+	}
+}
