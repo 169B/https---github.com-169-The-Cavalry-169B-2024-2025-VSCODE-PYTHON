@@ -72,7 +72,7 @@ forward_move = Event()
 Back_move = Event()
 Stop = Event()
 turn_right = Event()
-turn = Event()
+'''turn = Event()'''
 calibrate = Event()
 stop_initialize = Event()
 Auto_Stop = Event()
@@ -173,22 +173,6 @@ def onevent_controller_1buttonL1_pressed_0():
         AutoSelect = 0
     AutoSelect = AutoSelect + 1
     controller_1.rumble("-.-.")
-
-
-
-def onauton_autonomous_0():
-    global turn_heading_velocity_momentum, Forward_PID_Distance_Max_Speed, message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
-    # GLOBAL FINAL AUTONOMOUS SELECTION
-    remote_control_code_enabled = False
-    Inertial21.calibrate()
-    while Inertial21.is_calibrating():
-        sleep(50)
-    stop_initialize.broadcast()
-   
-    pid_turn(90,50)
-
-
-
 
 def onevent_controller_1axis2Changed_0():
     global Right_Axis, dead_zone_range
@@ -522,98 +506,135 @@ ws5 = Thread( when_started5 )
 
 
 
-def angle_diff(target, current):
-    """
-    Computes the shortest (signed) difference between two angles.
-    Returns a value between -180 and 180 degrees.
-    """
-    diff = (target - current + 180) % 360 - 180
-    return diff
+'''from MAIN_GB.main1 import *'''
 
-def pid_turn(degreeChange, max_velocity,timeout=3.0):
-    """
-    Performs an in-place turn by a relative amount of 'degreeChange' degrees.
-    Uses an optimized PID loop with velocity control.
-    """
+# PID Turn Function
 
-    # Get the current heading and compute the target heading (normalized to 0–359°)
-    currentHeading = Inertial21.rotation() % 360
-    targetHeading = (currentHeading + degreeChange) % 360
+def pid_turn(target_angle, max_speed, timeout=3):
+    Kp = 0.7   # Proportional Gain
+    Ki = 0.0 # Integral Gain
+    Kd = 4   # Derivative Gain
 
-    # ------------------------------
-    # PID Tuning Constants
-    kP = 0.06
-    kI = 0.001
-    kD = 0.15
-    # ------------------------------
-
-    integral = 0.0
-    dt = 0.02           # Loop time (20 ms)
-    tolerance = 0.8     # Very precise stopping error in degrees
-  # Max motor velocity (percent)
-    min_velocity = 15   # Prevents stalling
-    ramp_time = 0.5     # Acceleration time in seconds
-
+    integral = 0
+    previous_error = 0
+    threshold = 1.5  # Acceptable error in degrees
     start_time = brain.timer.time(SECONDS)
 
-    # Velocity ramp-up
-    current_velocity = min_velocity
-    velocity_step = (max_velocity - min_velocity) / (ramp_time / dt)
-
+    # Reset IMU Heading
+    Inertial21.set_rotation(0, DEGREES)
+    
     while True:
-        # Read current heading from the IMU
-        currentHeading = Inertial21.rotation() % 360
+        # Get current heading
+        current_angle = Inertial21.rotation(DEGREES)
+        error = target_angle - current_angle
 
-        # Compute error (shortest angle difference)
-        error = angle_diff(targetHeading, currentHeading)
-        if abs(error) < tolerance:
-            break
+        # If within acceptable range, stop
+        '''if abs(error) < threshold or (brain.timer.time(SECONDS) - start_time) > timeout:
+            break'''
 
-        # Use the IMU’s angular velocity for the derivative term
-        angular_velocity = Inertial21.gyro_rate(XAXIS, VelocityUnits.DPS)
-        derivative = -angular_velocity  # IMU gives direct angular velocity
+        print(current_angle)
 
-        # Accumulate error for the integral term
-        integral += error * dt
+        # PID Calculations
+        integral += error
+        derivative = error - previous_error
+        previous_error = error
 
-        # Compute PID output as velocity
-        pid_output = kP * error + kI * integral + kD * derivative
+        power = -(Kp * error) + (Ki * integral) + (Kd * derivative)
+        power = max(min(power, max_speed), -max_speed)  # Limit speed
 
-        # Adaptive velocity control: Prevents robot from stalling at low speed
-        if abs(pid_output) < min_velocity:
-            pid_output = min_velocity * (1 if pid_output > 0 else -1)
+        print(power)
 
-        # Velocity ramp-up for smoother acceleration
-        if abs(pid_output) > current_velocity:
-            current_velocity += velocity_step
-        else:
-            current_velocity = abs(pid_output)
+        # Apply power to motors for turning
+        LeftMotors.set_velocity(power, PERCENT)
+        RightMotors.set_velocity(power, PERCENT)
+        Left_Front.set_velocity(power, PERCENT)
+        Right_front.set_velocity(power, PERCENT)
+        
 
-        # Clamp the velocity
-        if current_velocity > max_velocity:
-            current_velocity = max_velocity
-
-        # Apply velocity to motors (turning in place)
-        LeftMotors.set_velocity(current_velocity, PERCENT)
-        Left_Front.set_velocity(current_velocity, PERCENT)
-        RightMotors.set_velocity(current_velocity, PERCENT)
-        Right_front.set_velocity(current_velocity, PERCENT)
-
-        # Spin the motors
         LeftMotors.spin(FORWARD)
-        Left_Front.spin(FORWARD)
         RightMotors.spin(FORWARD)
+        Left_Front.spin(FORWARD)
         Right_front.spin(FORWARD)
 
-        # Timeout condition
-        if brain.timer.time(SECONDS) - start_time > timeout:
+    # Stop motors after turn
+    LeftMotors.stop()
+    RightMotors.stop()
+    Left_Front.stop()
+    Right_front.stop()
+
+'''def pid_turn(target_angle, max_speed, timeout=3):
+    
+    # PID gains
+    Kp = 0.1   # Proportional Gain
+    Ki = 0 # Integral Gain
+    Kd = 0   # Derivative Gain
+
+    # Integral and derivative variables
+    integral = 0
+    previous_error = 0
+
+    # Threshold for acceptable error
+    threshold = 1  # Acceptable error in degrees
+
+    # Start time
+    start_time = brain.timer.time(SECONDS)
+
+    # Reset IMU heading
+    try:
+        Inertial21.set_heading(0, DEGREES)
+    except Exception as e:
+        print("Error resetting IMU heading:")
+
+    while True:
+        # Get current heading
+        try:
+            current_angle = Inertial21.heading(DEGREES)
+        except Exception as e:
+            print("Error getting current heading:")
             break
 
-    # Stop all drive motors
-    LeftMotors.stop()
-    Left_Front.stop()
-    RightMotors.stop()
-    Right_front.stop()
+        # Calculate error
+        error = target_angle - current_angle
+
+        # If within acceptable range, stop
+        if abs(error) < threshold or (brain.timer.time(SECONDS) - start_time) > timeout:
+            break
+
+        # PID calculations
+        integral += error
+        derivative = error - previous_error
+        previous_error = error
+
+        # Calculate power
+        power = (Kp * error) + (Ki * integral) + (Kd * derivative)
+        power = max(min(power, max_speed), -max_speed)  # Limit speed
+
+        # Apply power to motors for turning
+        try:
+            LeftMotors.set_velocity(power, PERCENT)
+            RightMotors.set_velocity(power, PERCENT)
+            Left_Front.set_velocity(power, PERCENT)
+            Right_front.set_velocity(power, PERCENT)
+        except Exception as e:
+            print("Error setting motor velocity:")
+
+        try:
+            LeftMotors.spin(FORWARD)
+            RightMotors.spin(FORWARD)
+            Left_Front.spin(FORWARD)
+            Right_front.spin(FORWARD)
+        except Exception as e:
+            print("Error spinning motors:")
+
+    # Stop motors after turn
+    try:
+        LeftMotors.stop()
+        RightMotors.stop()
+        Left_Front.stop()
+        Right_front.stop()
+    except Exception as e:
+        print("Error stopping motors:")'''
+
 
 '''from MAIN_GB.main1 import *'''
 
@@ -648,3 +669,102 @@ def pid_turn(degreeChange, max_velocity,timeout=3.0):
     Right_front.stop()
     Left_Front.stop()
     turn1 = 1'''
+
+
+
+    # Turn Function
+def turn(target_angle, max_speed):
+    Kp = 0.08  # Proportional Gain
+    integral = 0
+    previous_error = 0
+    threshold = 1.5  # Acceptable error in degrees
+    start_time = brain.timer.time(SECONDS)
+
+    # Reset IMU Heading
+    Inertial21.set_rotation(0, DEGREES)
+
+    while True:
+        # Get current heading
+        current_angle = Inertial21.rotation(DEGREES)
+        error = target_angle - current_angle
+
+        # If within acceptable range, stop
+        if abs(error) < threshold or (brain.timer.time(SECONDS) - start_time) > 3:
+            break
+
+        # Proportional controller
+        power = Kp * error
+        power = max(min(power, max_speed), -max_speed)  # Limit speed
+
+        # Apply power to motors for turning
+        LeftMotors.set_velocity(power, PERCENT)
+        RightMotors.set_velocity(power, PERCENT)
+        Left_Front.set_velocity(power, PERCENT)
+        Right_front.set_velocity(power, PERCENT)
+
+        # Spin motors forward
+        LeftMotors.spin(FORWARD)
+        RightMotors.spin(FORWARD)
+        Left_Front.spin(FORWARD)
+        Right_front.spin(FORWARD)
+
+    # Stop motors after turn
+    LeftMotors.stop()
+    RightMotors.stop()
+    Left_Front.stop()
+    Right_front.stop()
+
+
+
+
+    def turn_heading_velocity_momentum(turn_heading_velocity_momentum__heading, turn_heading_velocity_momentum__velocity, turn_heading_velocity_momentum__momentum):
+ 
+
+        # CURRENT ACCURATE TURN USING IMU
+        Inertial21.set_rotation(0, DEGREES)
+
+        # Calculate the desired rotation direction
+        rotation_direction = 1 if turn_heading_velocity_momentum__heading > Inertial21.rotation(DEGREES) else -1
+
+        # Calculate the desired turn angle
+        turn_angle = abs(turn_heading_velocity_momentum__heading - Inertial21.rotation(DEGREES))
+
+        # Calculate the desired number of iterations
+        num_iterations = int(turn_angle / 5)  # 5 degrees per iteration
+
+        # Set the motor velocities
+        RightMotors.set_velocity(turn_heading_velocity_momentum__velocity, PERCENT)
+        Right_front.set_velocity(turn_heading_velocity_momentum__velocity, PERCENT)
+        LeftMotors.set_velocity(turn_heading_velocity_momentum__velocity, PERCENT)
+        Left_Front.set_velocity(turn_heading_velocity_momentum__velocity, PERCENT)
+
+        # Set the motor direction
+        RightMotors.spin(FORWARD if rotation_direction == 1 else REVERSE)
+        Right_front.spin(FORWARD if rotation_direction == 1 else REVERSE)
+        LeftMotors.spin(FORWARD if rotation_direction == -1 else REVERSE)
+        Left_Front.spin(FORWARD if rotation_direction == -1 else REVERSE)
+
+        # Perform the turn
+        for _ in range(num_iterations):
+            wait(5, MSEC)
+
+        # Stop the motors
+        RightMotors.stop()
+        LeftMotors.stop()
+        Right_front.stop()
+        Left_Front.stop()
+
+
+def onauton_autonomous_0():
+    global turn_heading_velocity_momentum, Forward_PID_Distance_Max_Speed, message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    # GLOBAL FINAL AUTONOMOUS SELECTION
+    remote_control_code_enabled = False
+    Inertial21.calibrate()
+    while Inertial21.is_calibrating():
+        sleep(50)
+    stop_initialize.broadcast()
+    pid_turn(90,50)
+  
+
+
+
