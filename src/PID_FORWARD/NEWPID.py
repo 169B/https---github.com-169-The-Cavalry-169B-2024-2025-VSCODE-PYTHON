@@ -15,9 +15,9 @@ def pid_drive(distance_inches, max_velocity, timeout=5.0):
     an IMU-based proportional correction to maintain heading.
     """
     # ----- PID Constants for Distance Control -----
-    kP_distance = 0.5    # Proportional gain for distance error
+    kP_distance = 10    # Proportional gain for distance error
     kI_distance = 0.0    # Integral gain (can be tuned if needed)
-    kD_distance = 0.1    # Derivative gain for distance error
+    kD_distance = 10    # Derivative gain for distance error
 
     # ----- PID Constant for Heading Correction -----
     kP_angle = 0.1       # Proportional gain for heading error

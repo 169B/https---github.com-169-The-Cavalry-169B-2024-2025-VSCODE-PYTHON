@@ -84,25 +84,25 @@ def pid_turn(target_angle, max_speed, timeout=3):
         if abs(error) < threshold or (brain.timer.time(SECONDS) - start_time) > timeout:
             break
 
-        print(f"Current Angle: {current_angle}, Error: {error}")
+ 
 
         # PID Calculations
         integral += error
         derivative = error - previous_error
         previous_error = error
 
-        power = (Kp * error) + (Ki * integral) + (Kd * derivative)
+        power = -(Kp * error) + (Ki * integral) + (Kd * derivative)
         power = max(min(power, max_speed), -max_speed)  # Limit speed
 
         # Determine direction automatically
         if power > 0:  # Clockwise (right turn)
             LeftMotors.set_velocity(power, PERCENT)
             Left_Front.set_velocity(power, PERCENT)
-            RightMotors.set_velocity(-power, PERCENT)  # Reverse right side
-            Right_front.set_velocity(-power, PERCENT)
+            RightMotors.set_velocity(power, PERCENT)  # Reverse right side
+            Right_front.set_velocity(power, PERCENT)
         else:  # Counterclockwise (left turn)
-            LeftMotors.set_velocity(power, PERCENT)  # Reverse left side
-            Left_Front.set_velocity(power, PERCENT)
+            LeftMotors.set_velocity(-power, PERCENT)  # Reverse left side
+            Left_Front.set_velocity(-power, PERCENT)
             RightMotors.set_velocity(-power, PERCENT)  
             Right_front.set_velocity(-power, PERCENT)
 

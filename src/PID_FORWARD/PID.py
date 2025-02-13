@@ -1,6 +1,6 @@
 
 
-def Move_In_direction_Degree_Speed(Move_In_direction_Degree_Speed__Degree, Move_In_direction_Degree_Speed__Speed):
+'''def Move_In_direction_Degree_Speed(Move_In_direction_Degree_Speed__Degree, Move_In_direction_Degree_Speed__Speed):
     global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
     # LINKED WITH CURRENT PID FOR MOVEMENT VELOCITY
     if Move_In_direction_Degree_Speed__Degree > 0:
@@ -55,7 +55,7 @@ def Forward_PID_Distance_Max_Speed(Forward_PID_Distance_Max_Speed__Distance, For
             LeftMotors.stop()
             Left_Front.stop()
             break
-        wait(5, MSEC)
+        wait(5, MSEC)'''
 
 
 

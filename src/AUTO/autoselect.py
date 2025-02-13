@@ -58,4 +58,4 @@ def when_started5():
         controller_1.screen.print(".")
         wait(200, MSEC)
 
-    update_auto_display()  # Show first selection
+    update_auto_display()  # Show first selection'''

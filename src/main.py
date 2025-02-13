@@ -133,25 +133,68 @@ Distance2 = 0
 Turn_Angle = 0
 
 
+import time
 
-# Clear the screen and set pen color
-brain.screen.clear_screen()
-brain.screen.set_pen_color(Color.WHITE)
+# Autonomous Mode Options (Formatted for VEX Controller)
+auto_modes = [
+    "[NO AUTO]",
+    "[RED LEFT RING]",
+    "[BLUE RIGHT RING]",
+    "[RED RIGHT STAKE]",
+    "[BLUE LEFT STAKE]"
+]
 
-# Draw "169" using rectangles & circles
-brain.screen.draw_rectangle(20, 50, 20, 50)  # "1" (Vertical line)
-brain.screen.draw_circle(80, 75, 25)         # "6" (Circle)
-brain.screen.draw_rectangle(105, 50, 20, 50)  # "9" (Straight part)
-brain.screen.draw_circle(115, 75, 25)         # "9" (Circle)
+AutoSelect = 0  # Default to NO AUTO
 
-# Draw "B" using rectangles & arcs
-brain.screen.draw_rectangle(160, 50, 20, 50)  # Straight part of "B"
-brain.screen.draw_circle(170, 65, 15)         # Top curve of "B"
-brain.screen.draw_circle(170, 85, 15)         # Bottom curve of "B"
+def update_auto_display():
+    """ Updates the controller screen with a simple animation effect """
+    controller_1.screen.clear_screen()
+    controller_1.screen.set_cursor(1, 1)
+    
+    # Display Auto Mode Name
+    controller_1.screen.print(auto_modes[AutoSelect])
 
-# Keep display on
-while True:
-    wait(1, SECONDS)
+    # Show Navigation Controls
+    controller_1.screen.set_cursor(2, 1)
+    controller_1.screen.print("<< SELECT >>")
+
+    # Rumble Feedback
+    controller_1.rumble(".")
+
+def fancy_scroll_effect():
+    """ Creates a quick flashing effect when switching modes """
+    for _ in range(2):
+        controller_1.screen.clear_screen()
+        wait(50, MSEC)
+        update_auto_display()
+
+def onevent_controller_1buttonL1_pressed_0():
+    """ Scroll to the NEXT autonomous mode """
+    global AutoSelect
+    AutoSelect = (AutoSelect + 1) % len(auto_modes)
+    controller_1.rumble(".-")  
+    fancy_scroll_effect()
+
+def onevent_controller_1buttonL2_pressed_0():
+    """ Scroll to the PREVIOUS autonomous mode """
+    global AutoSelect
+    AutoSelect = (AutoSelect - 1) % len(auto_modes)
+    controller_1.rumble("-..")  
+    fancy_scroll_effect()
+
+def when_started5():
+    """ Initialize the auto selector with a clean display """
+    controller_1.screen.clear_screen()
+    controller_1.screen.set_cursor(1, 1)
+    controller_1.screen.print("AUTO SELECT MODE")
+
+    # Quick Flashing Effect
+    for _ in range(3):
+        controller_1.screen.print(".")
+        wait(200, MSEC)
+
+    update_auto_display()  # Show first selection'''
+
 def onevent_controller_1axis2Changed_0():
     global Right_Axis, dead_zone_range
     dead_zone_range = 10  # Adjust this value to set the dead zone range
@@ -236,7 +279,7 @@ def onevent_controller_1axis3Changed_0():
 import math
 
 # Function to limit how fast the output can change (slew rate limiting)
-def slew_rate_limit(current, previous, max_delta=5):
+def slew_rate_limit(current, previous, max_delta=2):
     delta = current - previous
     if abs(delta) > max_delta:
         return previous + max_delta * (1 if delta > 0 else -1)
@@ -248,6 +291,7 @@ def ondriver_drivercontrol_1():
     Left_Front.set_stopping(COAST)
     RightMotors.set_stopping(COAST)
     Right_front.set_stopping(COAST)
+    
 
     max_velocity = 100  # Maximum motor speed (percent)
 
@@ -275,8 +319,8 @@ def ondriver_drivercontrol_1():
         desired_right_output = right_cubic * max_velocity
 
         # Apply slew rate limiting to smooth out rapid changes in command
-        left_output = slew_rate_limit(desired_left_output, previous_left_output, max_delta=5)
-        right_output = slew_rate_limit(desired_right_output, previous_right_output, max_delta=5)
+        left_output = slew_rate_limit(desired_left_output, previous_left_output)
+        right_output = slew_rate_limit(desired_right_output, previous_right_output)
 
         # Save current outputs for the next iteration
         previous_left_output = left_output
@@ -289,8 +333,8 @@ def ondriver_drivercontrol_1():
         Right_front.set_velocity(right_output, PERCENT)
 
         # Spin the motors (adjust spin directions as needed for your drivetrain)
-        LeftMotors.spin(FORWARD)
-        Left_Front.spin(FORWARD)
+        LeftMotors.spin(REVERSE)
+        Left_Front.spin(REVERSE)
         RightMotors.spin(FORWARD)
         Right_front.spin(FORWARD)
 
@@ -434,7 +478,7 @@ def when_started3():
         wait(5, MSEC)
 
 
-def Move_In_direction_Degree_Speed(Move_In_direction_Degree_Speed__Degree, Move_In_direction_Degree_Speed__Speed):
+'''def Move_In_direction_Degree_Speed(Move_In_direction_Degree_Speed__Degree, Move_In_direction_Degree_Speed__Speed):
     global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
     # LINKED WITH CURRENT PID FOR MOVEMENT VELOCITY
     if Move_In_direction_Degree_Speed__Degree > 0:
@@ -489,7 +533,7 @@ def Forward_PID_Distance_Max_Speed(Forward_PID_Distance_Max_Speed__Distance, For
             LeftMotors.stop()
             Left_Front.stop()
             break
-        wait(5, MSEC)
+        wait(5, MSEC)'''
 
 
 
@@ -563,9 +607,9 @@ def pid_drive(distance_inches, max_velocity, timeout=5.0):
     an IMU-based proportional correction to maintain heading.
     """
     # ----- PID Constants for Distance Control -----
-    kP_distance = 0.5    # Proportional gain for distance error
+    kP_distance = 10    # Proportional gain for distance error
     kI_distance = 0.0    # Integral gain (can be tuned if needed)
-    kD_distance = 0.1    # Derivative gain for distance error
+    kD_distance = 10    # Derivative gain for distance error
 
     # ----- PID Constant for Heading Correction -----
     kP_angle = 0.1       # Proportional gain for heading error
@@ -752,25 +796,25 @@ def pid_turn(target_angle, max_speed, timeout=3):
         if abs(error) < threshold or (brain.timer.time(SECONDS) - start_time) > timeout:
             break
 
-        print(f"Current Angle: {current_angle}, Error: {error}")
+ 
 
         # PID Calculations
         integral += error
         derivative = error - previous_error
         previous_error = error
 
-        power = (Kp * error) + (Ki * integral) + (Kd * derivative)
+        power = -(Kp * error) + (Ki * integral) + (Kd * derivative)
         power = max(min(power, max_speed), -max_speed)  # Limit speed
 
         # Determine direction automatically
         if power > 0:  # Clockwise (right turn)
             LeftMotors.set_velocity(power, PERCENT)
             Left_Front.set_velocity(power, PERCENT)
-            RightMotors.set_velocity(-power, PERCENT)  # Reverse right side
-            Right_front.set_velocity(-power, PERCENT)
+            RightMotors.set_velocity(power, PERCENT)  # Reverse right side
+            Right_front.set_velocity(power, PERCENT)
         else:  # Counterclockwise (left turn)
-            LeftMotors.set_velocity(power, PERCENT)  # Reverse left side
-            Left_Front.set_velocity(power, PERCENT)
+            LeftMotors.set_velocity(-power, PERCENT)  # Reverse left side
+            Left_Front.set_velocity(-power, PERCENT)
             RightMotors.set_velocity(-power, PERCENT)  
             Right_front.set_velocity(-power, PERCENT)
 
@@ -798,70 +842,9 @@ def onauton_autonomous_0():
     while Inertial21.is_calibrating():
         sleep(50)
     stop_initialize.broadcast()
-    '''pid_turn(180,80)'''
-    pid_drive(24, 50)
+    pid_turn(180,80)
+
   
 
 
 
-import time
-
-# Autonomous Mode Options (Formatted for VEX Controller)
-auto_modes = [
-    "[NO AUTO]",
-    "[RED LEFT RING]",
-    "[BLUE RIGHT RING]",
-    "[RED RIGHT STAKE]",
-    "[BLUE LEFT STAKE]"
-]
-
-AutoSelect = 0  # Default to NO AUTO
-
-def update_auto_display():
-    """ Updates the controller screen with a simple animation effect """
-    controller_1.screen.clear_screen()
-    controller_1.screen.set_cursor(1, 1)
-    
-    # Display Auto Mode Name
-    controller_1.screen.print(auto_modes[AutoSelect])
-
-    # Show Navigation Controls
-    controller_1.screen.set_cursor(2, 1)
-    controller_1.screen.print("<< SELECT >>")
-
-    # Rumble Feedback
-    controller_1.rumble(".")
-
-def fancy_scroll_effect():
-    """ Creates a quick flashing effect when switching modes """
-    for _ in range(2):
-        controller_1.screen.clear_screen()
-        wait(50, MSEC)
-        update_auto_display()
-
-def onevent_controller_1buttonL1_pressed_0():
-    """ Scroll to the NEXT autonomous mode """
-    global AutoSelect
-    AutoSelect = (AutoSelect + 1) % len(auto_modes)
-    controller_1.rumble(".-")  
-    fancy_scroll_effect()
-
-def onevent_controller_1buttonL2_pressed_0():
-    """ Scroll to the PREVIOUS autonomous mode """
-    global AutoSelect
-    AutoSelect = (AutoSelect - 1) % len(auto_modes)
-    controller_1.rumble("-..")  
-    fancy_scroll_effect()
-
-def when_started5():
-    """ Initialize the auto selector with a clean display """
-    controller_1.screen.clear_screen()
-    controller_1.screen.set_cursor(1, 1)
-    controller_1.screen.print("AUTO SELECT MODE")
-
-    # Quick Flashing Effect
-    for _ in range(3):
-        controller_1.screen.print(".")
-        wait(200, MSEC)
-
-    update_auto_display()  # Show first selection

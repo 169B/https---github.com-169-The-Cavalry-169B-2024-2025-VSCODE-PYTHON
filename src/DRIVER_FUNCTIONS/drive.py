@@ -83,7 +83,7 @@ def onevent_controller_1axis3Changed_0():
 import math
 
 # Function to limit how fast the output can change (slew rate limiting)
-def slew_rate_limit(current, previous, max_delta=5):
+def slew_rate_limit(current, previous, max_delta=2):
     delta = current - previous
     if abs(delta) > max_delta:
         return previous + max_delta * (1 if delta > 0 else -1)
@@ -95,6 +95,7 @@ def ondriver_drivercontrol_1():
     Left_Front.set_stopping(COAST)
     RightMotors.set_stopping(COAST)
     Right_front.set_stopping(COAST)
+    
 
     max_velocity = 100  # Maximum motor speed (percent)
 
@@ -122,8 +123,8 @@ def ondriver_drivercontrol_1():
         desired_right_output = right_cubic * max_velocity
 
         # Apply slew rate limiting to smooth out rapid changes in command
-        left_output = slew_rate_limit(desired_left_output, previous_left_output, max_delta=5)
-        right_output = slew_rate_limit(desired_right_output, previous_right_output, max_delta=5)
+        left_output = slew_rate_limit(desired_left_output, previous_left_output)
+        right_output = slew_rate_limit(desired_right_output, previous_right_output)
 
         # Save current outputs for the next iteration
         previous_left_output = left_output
@@ -136,8 +137,8 @@ def ondriver_drivercontrol_1():
         Right_front.set_velocity(right_output, PERCENT)
 
         # Spin the motors (adjust spin directions as needed for your drivetrain)
-        LeftMotors.spin(FORWARD)
-        Left_Front.spin(FORWARD)
+        LeftMotors.spin(REVERSE)
+        Left_Front.spin(REVERSE)
         RightMotors.spin(FORWARD)
         Right_front.spin(FORWARD)
 
