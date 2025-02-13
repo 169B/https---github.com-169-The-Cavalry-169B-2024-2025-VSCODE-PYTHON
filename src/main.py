@@ -133,47 +133,86 @@ Distance2 = 0
 Turn_Angle = 0
 
 
+import time
 
+# Autonomous Mode Options (Formatted for VEX Controller)
+auto_modes = [
+    "[NO AUTO]",
+    "[RED LEFT RING]",
+    "[BLUE RIGHT RING]",
+    "[RED RIGHT STAKE]",
+    "[BLUE LEFT STAKE]"
+]
 
-def when_started5():
-    global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
-    # ---------------------------------------------------------------------------------------------------------------------------------------------------AUTONOMOUS SELECTOR-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    AutoSelect = 0
-    while True:
-        if AutoSelect == 1:
-            controller_1.screen.set_cursor(1, 1)
-            AutoSelect = 1
-            controller_1.screen.print("RED LEFT RING")
-        else:
-            if AutoSelect == 2:
-                controller_1.screen.set_cursor(1, 1)
-                AutoSelect = 2
-                controller_1.screen.print("BLUE RIGHT RING")
-            else:
-                if AutoSelect == 3:
-                    controller_1.screen.set_cursor(1, 1)
-                    AutoSelect = 3
-                    controller_1.screen.print("RED RIGHT STAKE")
-                else:
-                    if AutoSelect == 4:
-                        controller_1.screen.set_cursor(1, 1)
-                        AutoSelect = 4
-                        controller_1.screen.print("BLUE LEFT STAKE")
-                    else:
-                        controller_1.screen.clear_screen()
-                        controller_1.screen.set_cursor(1, 1)
-                        AutoSelect = 0
-                        controller_1.screen.print("NO AUTO")
-        wait(5, MSEC)
+AutoSelect = 0  # Default to NO AUTO
+
+def update_auto_display():
+    """ Updates the controller screen with a simple animation effect """
+    controller_1.screen.clear_screen()
+    controller_1.screen.set_cursor(1, 1)
+    
+    # Display Auto Mode Name
+    controller_1.screen.print(auto_modes[AutoSelect])
+
+    # Show Navigation Controls
+    controller_1.screen.set_cursor(2, 1)
+    controller_1.screen.print("<< SELECT >>")
+
+    # Rumble Feedback
+    controller_1.rumble(".")
+
+def fancy_scroll_effect():
+    """ Creates a quick flashing effect when switching modes """
+    for _ in range(2):
+        controller_1.screen.clear_screen()
+        wait(50, MSEC)
+        update_auto_display()
 
 def onevent_controller_1buttonL1_pressed_0():
-    global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
-    controller_1.screen.clear_screen()
-    if AutoSelect == 5:
-        AutoSelect = 0
-    AutoSelect = AutoSelect + 1
-    controller_1.rumble("-.-.")
+    """ Scroll to the NEXT autonomous mode """
+    global AutoSelect
+    AutoSelect = (AutoSelect + 1) % len(auto_modes)
+    controller_1.rumble(".-")  
+    fancy_scroll_effect()
 
+def onevent_controller_1buttonL2_pressed_0():
+    """ Scroll to the PREVIOUS autonomous mode """
+    global AutoSelect
+    AutoSelect = (AutoSelect - 1) % len(auto_modes)
+    controller_1.rumble("-..")  
+    fancy_scroll_effect()
+
+def when_started5():
+    """ Initialize the auto selector with a clean display """
+    controller_1.screen.clear_screen()
+    controller_1.screen.set_cursor(1, 1)
+    controller_1.screen.print("AUTO SELECT MODE")
+
+    # Quick Flashing Effect
+    for _ in range(3):
+        controller_1.screen.print(".")
+        wait(200, MSEC)
+
+    update_auto_display()  # Show first selection
+
+# Clear the screen and set pen color
+brain.screen.clear_screen()
+brain.screen.set_pen_color(Color.WHITE)
+
+# Draw "169" using rectangles & circles
+brain.screen.draw_rectangle(20, 50, 20, 50)  # "1" (Vertical line)
+brain.screen.draw_circle(80, 75, 25)         # "6" (Circle)
+brain.screen.draw_rectangle(105, 50, 20, 50)  # "9" (Straight part)
+brain.screen.draw_circle(115, 75, 25)         # "9" (Circle)
+
+# Draw "B" using rectangles & arcs
+brain.screen.draw_rectangle(160, 50, 20, 50)  # Straight part of "B"
+brain.screen.draw_circle(170, 65, 15)         # Top curve of "B"
+brain.screen.draw_circle(170, 85, 15)         # Bottom curve of "B"
+
+# Keep display on
+while True:
+    wait(1, SECONDS)
 def onevent_controller_1axis2Changed_0():
     global Right_Axis, dead_zone_range
     dead_zone_range = 10  # Adjust this value to set the dead zone range
