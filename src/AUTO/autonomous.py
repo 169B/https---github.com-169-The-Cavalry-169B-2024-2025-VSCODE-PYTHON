@@ -9,7 +9,8 @@ def onauton_autonomous_0():
     while Inertial21.is_calibrating():
         sleep(50)
     stop_initialize.broadcast()
-    pid_turn(90,50)
+    '''pid_turn(180,80)'''
+    pid_drive(24, 50)
   
 
 

@@ -1,47 +1,108 @@
-'''import math
-import time
+import math
 
-# Initialize PID variables
-kp = 0.1  # Proportional gain
-ki = 0.0  # Integral gain
-kd = 0.0  # Derivative gain
-error_sum = 0  # Error sum for integral term
-previous_error = 0  # Previous error for derivative term
+def angle_diff(target, current):
+    """
+    Computes the shortest (signed) difference between two angles (in degrees).
+    Returns a value between -180 and 180.
+    """
+    diff = (target - current + 180) % 360 - 180
+    return diff
 
+def pid_drive(distance_inches, max_velocity, timeout=5.0):
+    """
+    Drives the robot forward for a given distance in inches.
+    Uses a PID loop with encoder feedback for distance control and
+    an IMU-based proportional correction to maintain heading.
+    """
+    # ----- PID Constants for Distance Control -----
+    kP_distance = 0.5    # Proportional gain for distance error
+    kI_distance = 0.0    # Integral gain (can be tuned if needed)
+    kD_distance = 0.1    # Derivative gain for distance error
 
-def pid_controller():
-    global kp, ki, kd, error_sum, previous_error
+    # ----- PID Constant for Heading Correction -----
+    kP_angle = 0.1       # Proportional gain for heading error
 
-    # Calculate error
-    current_distance = ((math.fabs(Right_front.position(DEGREES)) / 360) * (2.75 * pi) + ((math.fabs(Left_Front.position(DEGREES)) / 360) * (2.75 * pi) + ((math.fabs(RightMotors.position(DEGREES)) / 360) * (2.75 * pi) + (math.fabs(LeftMotors.position(DEGREES)) / 360) * (2.75 * pi)))) / 4
-    error = target_distance - current_distance
+    dt = 0.02  # Loop time (20 ms)
+    tolerance_distance = 0.5  # Acceptable distance error in inches
+        # Maximum motor speed (in percent)
 
-    # Calculate PID terms
-    proportional_term = kp * error
-    integral_term = ki * error_sum
-    derivative_term = kd * (error - previous_error)
-    previous_error = error
+    # ----- Reset Encoders and Set Initial Heading -----
+    LeftMotors.reset_rotation()
+    Left_Front.reset_rotation()
+    RightMotors.reset_rotation()
+    Right_Front.reset_rotation()
 
-    # Update error sum
-    error_sum += error
+    # Save the initial heading from the IMU as the target heading
+    target_heading = Inertial21.rotation()  # desired heading for straight travel
 
-    # Calculate motor speed
-    motor_speed = max_speed * (proportional_term + integral_term + derivative_term)
-    motor.set_velocity(motor_speed, vex.MEDIUM)
+    integral_distance = 0.0
+    previous_error_distance = 0.0
+    start_time = brain.timer.time(SECONDS)
 
-    # Update PID gains
-    if error < 0.1:
-        kp += 0.01
-        ki += 0.001
-        kd += 0.001
-    elif error > 0.1:
-        kp -= 0.01
-        ki -= 0.001
-        kd -= 0.001
+    while True:
+        # ----- Calculate Traveled Distance -----
+        # Read the left and right motor encoder values (in degrees)
+        left_deg = LeftMotors.rotation(DEGREES)
+        right_deg = RightMotors.rotation(DEGREES)
+        avg_deg = (left_deg + right_deg) / 2.0
 
-    # Print PID gains and error
-    print(f"KP: {kp}, KI: {ki}, KD: {kd}, Error: {error}")
+        # Convert encoder degrees to inches.
+        # Adjust wheel_diameter if your wheels are not 4 inches.
+        wheel_diameter = 4.0  
+        wheel_circumference = wheel_diameter * math.pi  # inches per revolution
+        traveled_inches = (avg_deg / 360.0) * wheel_circumference
 
-while True:
-    pid_controller()
-    time.sleep(0.1)  # Adjust this value to change the PID update rate'''
+        # ----- Distance Error Calculation -----
+        error_distance = distance_inches - traveled_inches
+
+        # Break out if we've reached our target (or timed out)
+        if abs(error_distance) < tolerance_distance or brain.timer.time(SECONDS) - start_time > timeout:
+            break
+
+        # ----- PID Calculation for Distance -----
+        integral_distance += error_distance * dt
+        derivative_distance = (error_distance - previous_error_distance) / dt
+        previous_error_distance = error_distance
+
+        output_distance = (kP_distance * error_distance +
+                           kI_distance * integral_distance +
+                           kD_distance * derivative_distance)
+
+        # Clamp the distance output to the maximum velocity
+        if output_distance > max_velocity:
+            output_distance = max_velocity
+        elif output_distance < -max_velocity:
+            output_distance = -max_velocity
+
+        # ----- Heading Correction using IMU -----
+        current_heading = Inertial21.rotation()
+        error_heading = angle_diff(target_heading, current_heading)
+        output_heading = kP_angle * error_heading
+
+        # ----- Combine Distance and Heading Corrections -----
+        # For a differential drive:
+        left_output = output_distance + output_heading
+        right_output = output_distance - output_heading
+
+        # Clamp outputs to max_velocity limits
+        left_output = max(-max_velocity, min(max_velocity, left_output))
+        right_output = max(-max_velocity, min(max_velocity, right_output))
+
+        # ----- Command the Motors -----
+        LeftMotors.set_velocity(left_output, PERCENT)
+        Left_Front.set_velocity(left_output, PERCENT)
+        RightMotors.set_velocity(right_output, PERCENT)
+        Right_Front.set_velocity(right_output, PERCENT)
+
+        LeftMotors.spin(FORWARD)
+        Left_Front.spin(FORWARD)
+        RightMotors.spin(FORWARD)
+        Right_Front.spin(FORWARD)
+
+        wait(dt, SECONDS)
+
+    # ----- Stop all motors when done -----
+    LeftMotors.stop()
+    Left_Front.stop()
+    RightMotors.stop()
+    Right_Front.stop()
