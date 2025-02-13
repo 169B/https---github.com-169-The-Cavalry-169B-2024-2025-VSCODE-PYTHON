@@ -222,7 +222,7 @@ def onevent_controller_1axis3Changed_0():
         Left_Axis = Left_Axis
 
 
-def ondriver_drivercontrol_1():
+'''def ondriver_drivercontrol_1():
     global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
     # CONTROLLER MOTOR VELOCITY CONTROL
     remote_control_code_enabled = True
@@ -253,7 +253,71 @@ def ondriver_drivercontrol_1():
             Right_front.spin(FORWARD)
             Left_Front.spin(REVERSE)
             wait(5, MSEC)
-        wait(5, MSEC)
+        wait(5, MSEC)'''
+
+import math
+
+# Function to limit how fast the output can change (slew rate limiting)
+def slew_rate_limit(current, previous, max_delta=5):
+    delta = current - previous
+    if abs(delta) > max_delta:
+        return previous + max_delta * (1 if delta > 0 else -1)
+    return current
+
+def ondriver_drivercontrol_1():
+    # Set drive motors to coast for smoother motion
+    LeftMotors.set_stopping(COAST)
+    Left_Front.set_stopping(COAST)
+    RightMotors.set_stopping(COAST)
+    Right_front.set_stopping(COAST)
+
+    max_velocity = 100  # Maximum motor speed (percent)
+
+    # Initialize previous outputs for slew rate limiting
+    previous_left_output = 0
+    previous_right_output = 0
+
+    while True:
+        # Read joystick values (assumed to be from -100 to 100)
+        left_input = Left_Axis
+        right_input = Right_Axis
+
+
+        # Normalize the inputs to the range -1.0 to 1.0
+        left_normalized = left_input / 100.0
+        right_normalized = right_input / 100.0
+
+        # Apply cubic scaling for smoother, less sensitive control at lower speeds
+        # This gives a fine response near zero and full power at the extremes.
+        left_cubic = left_normalized ** 3
+        right_cubic = right_normalized ** 3
+
+        # Scale the cubic outputs by the maximum velocity
+        desired_left_output = left_cubic * max_velocity
+        desired_right_output = right_cubic * max_velocity
+
+        # Apply slew rate limiting to smooth out rapid changes in command
+        left_output = slew_rate_limit(desired_left_output, previous_left_output, max_delta=5)
+        right_output = slew_rate_limit(desired_right_output, previous_right_output, max_delta=5)
+
+        # Save current outputs for the next iteration
+        previous_left_output = left_output
+        previous_right_output = right_output
+
+        # Set the motor velocities based on the computed outputs
+        LeftMotors.set_velocity(left_output, PERCENT)
+        Left_Front.set_velocity(left_output, PERCENT)
+        RightMotors.set_velocity(right_output, PERCENT)
+        Right_front.set_velocity(right_output, PERCENT)
+
+        # Spin the motors (adjust spin directions as needed for your drivetrain)
+        LeftMotors.spin(FORWARD)
+        Left_Front.spin(FORWARD)
+        RightMotors.spin(FORWARD)
+        Right_front.spin(FORWARD)
+
+        wait(20, MSEC)
+
 
 def ondriver_drivercontrol_2():
     global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
@@ -504,13 +568,133 @@ ws3 = Thread( when_started3 )
 ws4 = Thread( when_started4 )
 ws5 = Thread( when_started5 )
 
+import math
+
+def angle_diff(target, current):
+    """
+    Computes the shortest (signed) difference between two angles (in degrees).
+    Returns a value between -180 and 180.
+    """
+    diff = (target - current + 180) % 360 - 180
+    return diff
+
+def pid_drive(distance_inches, max_velocity, timeout=5.0):
+    """
+    Drives the robot forward for a given distance in inches.
+    Uses a PID loop with encoder feedback for distance control and
+    an IMU-based proportional correction to maintain heading.
+    """
+    # ----- PID Constants for Distance Control -----
+    kP_distance = 0.5    # Proportional gain for distance error
+    kI_distance = 0.0    # Integral gain (can be tuned if needed)
+    kD_distance = 0.1    # Derivative gain for distance error
+
+    # ----- PID Constant for Heading Correction -----
+    kP_angle = 0.1       # Proportional gain for heading error
+
+    dt = 0.02  # Loop time (20 ms)
+    tolerance_distance = 0.5  # Acceptable distance error in inches
+        # Maximum motor speed (in percent)
+
+    # ----- Reset Encoders and Set Initial Heading -----
+    RightMotors.set_velocity(5, PERCENT)
+    Right_front.set_velocity(5, PERCENT)
+    LeftMotors.set_velocity(5, PERCENT)
+    Left_Front.set_velocity(5, PERCENT)
+    RightMotors.set_position(0, DEGREES)
+    Right_front.set_position(0, DEGREES)
+    LeftMotors.set_position(0, DEGREES)
+    Left_Front.set_position(0, DEGREES)
+
+    # Save the initial heading from the IMU as the target heading
+    target_heading = Inertial21.rotation()  # desired heading for straight travel
+
+    integral_distance = 0.0
+    previous_error_distance = 0.0
+    start_time = brain.timer.time(SECONDS)
+
+    while True:
+        # ----- Calculate Traveled Distance -----
+        # Read the left and right motor encoder values (in degrees)
+        left_deg = LeftMotors.position(DEGREES)+Left_Front.position(DEGREES)
+        right_deg = RightMotors.position(DEGREES)+ Right_front.position(DEGREES)
+        avg_deg = (left_deg + right_deg) / 4.0
+
+        # Convert encoder degrees to inches.
+        # Adjust wheel_diameter if your wheels are not 4 inches.
+        wheel_diameter = 2.75  # inches  
+        wheel_circumference = wheel_diameter * math.pi  # inches per revolution
+        traveled_inches = (avg_deg / 360.0) * wheel_circumference
+
+        # ----- Distance Error Calculation -----
+        error_distance = distance_inches - traveled_inches
+
+        # Break out if we've reached our target (or timed out)
+        if abs(error_distance) < tolerance_distance or brain.timer.time(SECONDS) - start_time > timeout:
+            break
+
+        # ----- PID Calculation for Distance -----
+        integral_distance += error_distance * dt
+        derivative_distance = (error_distance - previous_error_distance) / dt
+        previous_error_distance = error_distance
+
+        output_distance = (kP_distance * error_distance +
+                           kI_distance * integral_distance +
+                           kD_distance * derivative_distance)
+
+        # Clamp the distance output to the maximum velocity
+        if output_distance > max_velocity:
+            output_distance = max_velocity
+        elif output_distance < -max_velocity:
+            output_distance = -max_velocity
+
+        # ----- Heading Correction using IMU -----
+        current_heading = Inertial21.rotation()
+        error_heading = angle_diff(target_heading, current_heading)
+        output_heading = kP_angle * error_heading
+
+        # ----- Combine Distance and Heading Corrections -----
+        # For a differential drive:
+        left_output = output_distance + output_heading
+        right_output = output_distance - output_heading
+
+        # Clamp outputs to max_velocity limits
+        left_output = max(-max_velocity, min(max_velocity, left_output))
+        right_output = max(-max_velocity, min(max_velocity, right_output))
+
+        # Determine drive direction based on desired distance
+        if distance_inches >= 0:
+            left_spin_direction = REVERSE
+            right_spin_direction = FORWARD
+        else:
+            left_spin_direction = FORWARD
+            right_spin_direction = REVERSE
+
+        # ----- Command the Motors -----
+        LeftMotors.set_velocity(left_output, PERCENT)
+        Left_Front.set_velocity(left_output, PERCENT)
+        RightMotors.set_velocity(right_output, PERCENT)
+        Right_front.set_velocity(right_output, PERCENT)
+
+        LeftMotors.spin(left_spin_direction)
+        Left_Front.spin(left_spin_direction)
+        RightMotors.spin(right_spin_direction)
+        Right_front.spin(right_spin_direction)
+
+        wait(dt, SECONDS)
+
+    # ----- Stop all motors when done -----
+    LeftMotors.stop()
+    Left_Front.stop()
+    RightMotors.stop()
+    Right_front.stop()
 
 
 '''from MAIN_GB.main1 import *'''
 
 # PID Turn Function
 
-def pid_turn(target_angle, max_speed, timeout=3):
+'''def pid_turn(target_angle, max_speed, timeout=3):
     Kp = 0.7   # Proportional Gain
     Ki = 0.0 # Integral Gain
     Kd = 4   # Derivative Gain
@@ -542,7 +726,6 @@ def pid_turn(target_angle, max_speed, timeout=3):
         power = -(Kp * error) + (Ki * integral) + (Kd * derivative)
         power = max(min(power, max_speed), -max_speed)  # Limit speed
 
-        print(power)
 
         # Apply power to motors for turning
         LeftMotors.set_velocity(power, PERCENT)
@@ -560,7 +743,71 @@ def pid_turn(target_angle, max_speed, timeout=3):
     LeftMotors.stop()
     RightMotors.stop()
     Left_Front.stop()
+    Right_front.stop()'''
+
+
+
+
+# PID Turn Function
+def pid_turn(target_angle, max_speed, timeout=3):
+    Kp = 0.7   # Proportional Gain
+    Ki = 0.0   # Integral Gain
+    Kd = 4     # Derivative Gain
+
+    integral = 0
+    previous_error = 0
+    threshold = 1.5  # Acceptable error in degrees
+    start_time = brain.timer.time(SECONDS)
+
+    # Reset IMU Heading
+    Inertial21.set_rotation(0, DEGREES)
+
+    while True:
+        # Get current heading
+        current_angle = Inertial21.rotation(DEGREES)
+        error = target_angle - current_angle
+
+        # Normalize the error to the shortest turn direction (-180 to 180 range)
+        error = (error + 180) % 360 - 180
+
+        # If within acceptable range, stop
+        if abs(error) < threshold or (brain.timer.time(SECONDS) - start_time) > timeout:
+            break
+
+        print(f"Current Angle: {current_angle}, Error: {error}")
+
+        # PID Calculations
+        integral += error
+        derivative = error - previous_error
+        previous_error = error
+
+        power = (Kp * error) + (Ki * integral) + (Kd * derivative)
+        power = max(min(power, max_speed), -max_speed)  # Limit speed
+
+        # Determine direction automatically
+        if power > 0:  # Clockwise (right turn)
+            LeftMotors.set_velocity(power, PERCENT)
+            Left_Front.set_velocity(power, PERCENT)
+            RightMotors.set_velocity(-power, PERCENT)  # Reverse right side
+            Right_front.set_velocity(-power, PERCENT)
+        else:  # Counterclockwise (left turn)
+            LeftMotors.set_velocity(power, PERCENT)  # Reverse left side
+            Left_Front.set_velocity(power, PERCENT)
+            RightMotors.set_velocity(-power, PERCENT)  
+            Right_front.set_velocity(-power, PERCENT)
+
+        # Spin motors
+        LeftMotors.spin(FORWARD)
+        Left_Front.spin(FORWARD)
+        RightMotors.spin(FORWARD)
+        Right_front.spin(FORWARD)
+
+    # Stop motors after turn
+    LeftMotors.stop()
+    RightMotors.stop()
+    Left_Front.stop()
     Right_front.stop()
+
 
 
 

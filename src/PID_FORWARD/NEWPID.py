@@ -27,10 +27,14 @@ def pid_drive(distance_inches, max_velocity, timeout=5.0):
         # Maximum motor speed (in percent)
 
     # ----- Reset Encoders and Set Initial Heading -----
-    LeftMotors.reset_rotation()
-    Left_Front.reset_rotation()
-    RightMotors.reset_rotation()
-    Right_Front.reset_rotation()
+    RightMotors.set_velocity(5, PERCENT)
+    Right_front.set_velocity(5, PERCENT)
+    LeftMotors.set_velocity(5, PERCENT)
+    Left_Front.set_velocity(5, PERCENT)
+    RightMotors.set_position(0, DEGREES)
+    Right_front.set_position(0, DEGREES)
+    LeftMotors.set_position(0, DEGREES)
+    Left_Front.set_position(0, DEGREES)
 
     # Save the initial heading from the IMU as the target heading
     target_heading = Inertial21.rotation()  # desired heading for straight travel
@@ -42,13 +46,13 @@ def pid_drive(distance_inches, max_velocity, timeout=5.0):
     while True:
         # ----- Calculate Traveled Distance -----
         # Read the left and right motor encoder values (in degrees)
-        left_deg = LeftMotors.rotation(DEGREES)
-        right_deg = RightMotors.rotation(DEGREES)
-        avg_deg = (left_deg + right_deg) / 2.0
+        left_deg = LeftMotors.position(DEGREES)+Left_Front.position(DEGREES)
+        right_deg = RightMotors.position(DEGREES)+ Right_front.position(DEGREES)
+        avg_deg = (left_deg + right_deg) / 4.0
 
         # Convert encoder degrees to inches.
         # Adjust wheel_diameter if your wheels are not 4 inches.
-        wheel_diameter = 4.0  
+        wheel_diameter = 2.75  # inches  
         wheel_circumference = wheel_diameter * math.pi  # inches per revolution
         traveled_inches = (avg_deg / 360.0) * wheel_circumference
 
@@ -88,16 +92,24 @@ def pid_drive(distance_inches, max_velocity, timeout=5.0):
         left_output = max(-max_velocity, min(max_velocity, left_output))
         right_output = max(-max_velocity, min(max_velocity, right_output))
 
+        # Determine drive direction based on desired distance
+        if distance_inches >= 0:
+            left_spin_direction = REVERSE
+            right_spin_direction = FORWARD
+        else:
+            left_spin_direction = FORWARD
+            right_spin_direction = REVERSE
+
         # ----- Command the Motors -----
         LeftMotors.set_velocity(left_output, PERCENT)
         Left_Front.set_velocity(left_output, PERCENT)
         RightMotors.set_velocity(right_output, PERCENT)
-        Right_Front.set_velocity(right_output, PERCENT)
+        Right_front.set_velocity(right_output, PERCENT)
 
-        LeftMotors.spin(FORWARD)
-        Left_Front.spin(FORWARD)
-        RightMotors.spin(FORWARD)
-        Right_Front.spin(FORWARD)
+        LeftMotors.spin(left_spin_direction)
+        Left_Front.spin(left_spin_direction)
+        RightMotors.spin(right_spin_direction)
+        Right_front.spin(right_spin_direction)
 
         wait(dt, SECONDS)
 
@@ -105,4 +117,4 @@ def pid_drive(distance_inches, max_velocity, timeout=5.0):
     LeftMotors.stop()
     Left_Front.stop()
     RightMotors.stop()
-    Right_Front.stop()
+    Right_front.stop()

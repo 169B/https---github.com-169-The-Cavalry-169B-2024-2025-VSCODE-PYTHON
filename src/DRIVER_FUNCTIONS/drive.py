@@ -47,7 +47,7 @@ def onevent_controller_1axis3Changed_0():
         Left_Axis = Left_Axis
 
 
-def ondriver_drivercontrol_1():
+'''def ondriver_drivercontrol_1():
     global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
     # CONTROLLER MOTOR VELOCITY CONTROL
     remote_control_code_enabled = True
@@ -78,7 +78,71 @@ def ondriver_drivercontrol_1():
             Right_front.spin(FORWARD)
             Left_Front.spin(REVERSE)
             wait(5, MSEC)
-        wait(5, MSEC)
+        wait(5, MSEC)'''
+
+import math
+
+# Function to limit how fast the output can change (slew rate limiting)
+def slew_rate_limit(current, previous, max_delta=5):
+    delta = current - previous
+    if abs(delta) > max_delta:
+        return previous + max_delta * (1 if delta > 0 else -1)
+    return current
+
+def ondriver_drivercontrol_1():
+    # Set drive motors to coast for smoother motion
+    LeftMotors.set_stopping(COAST)
+    Left_Front.set_stopping(COAST)
+    RightMotors.set_stopping(COAST)
+    Right_front.set_stopping(COAST)
+
+    max_velocity = 100  # Maximum motor speed (percent)
+
+    # Initialize previous outputs for slew rate limiting
+    previous_left_output = 0
+    previous_right_output = 0
+
+    while True:
+        # Read joystick values (assumed to be from -100 to 100)
+        left_input = Left_Axis
+        right_input = Right_Axis
+
+
+        # Normalize the inputs to the range -1.0 to 1.0
+        left_normalized = left_input / 100.0
+        right_normalized = right_input / 100.0
+
+        # Apply cubic scaling for smoother, less sensitive control at lower speeds
+        # This gives a fine response near zero and full power at the extremes.
+        left_cubic = left_normalized ** 3
+        right_cubic = right_normalized ** 3
+
+        # Scale the cubic outputs by the maximum velocity
+        desired_left_output = left_cubic * max_velocity
+        desired_right_output = right_cubic * max_velocity
+
+        # Apply slew rate limiting to smooth out rapid changes in command
+        left_output = slew_rate_limit(desired_left_output, previous_left_output, max_delta=5)
+        right_output = slew_rate_limit(desired_right_output, previous_right_output, max_delta=5)
+
+        # Save current outputs for the next iteration
+        previous_left_output = left_output
+        previous_right_output = right_output
+
+        # Set the motor velocities based on the computed outputs
+        LeftMotors.set_velocity(left_output, PERCENT)
+        Left_Front.set_velocity(left_output, PERCENT)
+        RightMotors.set_velocity(right_output, PERCENT)
+        Right_front.set_velocity(right_output, PERCENT)
+
+        # Spin the motors (adjust spin directions as needed for your drivetrain)
+        LeftMotors.spin(FORWARD)
+        Left_Front.spin(FORWARD)
+        RightMotors.spin(FORWARD)
+        Right_front.spin(FORWARD)
+
+        wait(20, MSEC)
+
 
 def ondriver_drivercontrol_2():
     global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
