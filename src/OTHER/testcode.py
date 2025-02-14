@@ -20,8 +20,7 @@ def when_started2():
                     digital_out_e.set(False)
                 wait(5, MSEC)
         else:
-            controller_1.screen.print("NO AUTO!!!")
-        wait(5, MSEC)
+            wait(5, MSEC)
 
 
 def when_started3():

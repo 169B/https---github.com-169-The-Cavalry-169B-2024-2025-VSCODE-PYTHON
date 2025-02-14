@@ -462,8 +462,7 @@ def when_started2():
                     digital_out_e.set(False)
                 wait(5, MSEC)
         else:
-            controller_1.screen.print("NO AUTO!!!")
-        wait(5, MSEC)
+            wait(5, MSEC)
 
 
 def when_started3():
@@ -478,19 +477,19 @@ def when_started3():
         wait(5, MSEC)
 
 
-'''def Move_In_direction_Degree_Speed(Move_In_direction_Degree_Speed__Degree, Move_In_direction_Degree_Speed__Speed):
+def Move_In_direction_Degree_Speed(Move_In_direction_Degree_Speed__Degree, Move_In_direction_Degree_Speed__Speed):
     global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
     # LINKED WITH CURRENT PID FOR MOVEMENT VELOCITY
     if Move_In_direction_Degree_Speed__Degree > 0:
-        RightMotors.set_velocity((Move_In_direction_Degree_Speed__Speed - Move_In_direction_Degree_Speed__Degree), PERCENT)
-        Right_front.set_velocity((Move_In_direction_Degree_Speed__Speed - Move_In_direction_Degree_Speed__Degree), PERCENT)
+        RightMotors.set_velocity((Move_In_direction_Degree_Speed__Speed), PERCENT)
+        Right_front.set_velocity((Move_In_direction_Degree_Speed__Speed), PERCENT)
         LeftMotors.set_velocity(Move_In_direction_Degree_Speed__Speed, PERCENT)
         Left_Front.set_velocity(Move_In_direction_Degree_Speed__Speed, PERCENT)
     else:
         RightMotors.set_velocity(Move_In_direction_Degree_Speed__Speed, PERCENT)
         Right_front.set_velocity(Move_In_direction_Degree_Speed__Speed, PERCENT)
-        LeftMotors.set_velocity((Move_In_direction_Degree_Speed__Speed + Move_In_direction_Degree_Speed__Degree), PERCENT)
-        Left_Front.set_velocity((Move_In_direction_Degree_Speed__Speed + Move_In_direction_Degree_Speed__Degree), PERCENT)
+        LeftMotors.set_velocity((Move_In_direction_Degree_Speed__Speed), PERCENT)
+        Left_Front.set_velocity((Move_In_direction_Degree_Speed__Speed), PERCENT)
 
 
 def Forward_PID_Distance_Max_Speed(Forward_PID_Distance_Max_Speed__Distance, Forward_PID_Distance_Max_Speed__Max_Speed):
@@ -520,7 +519,7 @@ def Forward_PID_Distance_Max_Speed(Forward_PID_Distance_Max_Speed__Distance, For
         Distance_travled = ((math.fabs(Right_front.position(DEGREES)) / 360) * (2.75 * pi) + ((math.fabs(Left_Front.position(DEGREES)) / 360) * (2.75 * pi) + ((math.fabs(RightMotors.position(DEGREES)) / 360) * (2.75 * pi) + (math.fabs(LeftMotors.position(DEGREES)) / 360) * (2.75 * pi)))) / 4
         integral = (integral + error) * Dellay
         derivitive = (error - Previus_error) * Dellay
-        direction = Kp * Proportional + (Ki * integral + Kd * derivitive)
+        direction = (Kp * Proportional + (Ki * integral + Kd * derivitive))
         Previus_error = error
         Move_In_direction_Degree_Speed((direction * Forward_PID_Distance_Max_Speed__Max_Speed) / 33, Forward_PID_Distance_Max_Speed__Max_Speed)
         RightMotors.spin(REVERSE)
@@ -533,7 +532,7 @@ def Forward_PID_Distance_Max_Speed(Forward_PID_Distance_Max_Speed__Distance, For
             LeftMotors.stop()
             Left_Front.stop()
             break
-        wait(5, MSEC)'''
+        wait(5, MSEC)
 
 
 
@@ -592,134 +591,122 @@ ws5 = Thread( when_started5 )
 
 import math
 
-def angle_diff(target, current):
-    """
-    Computes the shortest (signed) difference between two angles (in degrees).
-    Returns a value between -180 and 180.
-    """
-    diff = (target - current + 180) % 360 - 180
-    return diff
+# Constants
+WHEEL_DIAMETER = 2.75  # inches
+WHEEL_CIRCUMFERENCE = WHEEL_DIAMETER * math.pi  # inches per revolution
+TICKS_PER_REV = 360  # Encoder ticks per revolution (degrees)
 
-def pid_drive(distance_inches, max_velocity, timeout=5.0):
+# PID Constants for Distance Control
+kP_distance = 1.2
+kI_distance = 0.0  
+kD_distance = 0.1
+
+# PID Constant for Heading Correction
+kP_heading = 0.1
+
+def pid_drive(distance_inches, max_velocity_percent, timeout=20.0):
+
+    LeftMotors.set_stopping(BRAKE)
+    RightMotors.set_stopping(BRAKE)
+    Left_Front.set_stopping(BRAKE)
+    Right_front.set_stopping(BRAKE)
     """
-    Drives the robot forward for a given distance in inches.
-    Uses a PID loop with encoder feedback for distance control and
-    an IMU-based proportional correction to maintain heading.
+    Drives the robot forward for a given distance (in inches) with PID control 
+    and IMU-based heading correction.
+
+    Args:
+        distance_inches (float): Target distance to move (in inches).
+        max_velocity_percent (float): Maximum motor speed (0-100%).
+        timeout (float): Maximum time allowed for movement (seconds).
     """
-    # ----- PID Constants for Distance Control -----
-    kP_distance = 10    # Proportional gain for distance error
-    kI_distance = 0.0    # Integral gain (can be tuned if needed)
-    kD_distance = 10    # Derivative gain for distance error
 
-    # ----- PID Constant for Heading Correction -----
-    kP_angle = 0.1       # Proportional gain for heading error
-
-    dt = 0.02  # Loop time (20 ms)
-    tolerance_distance = 0.5  # Acceptable distance error in inches
-        # Maximum motor speed (in percent)
-
-    # ----- Reset Encoders and Set Initial Heading -----
-    RightMotors.set_velocity(5, PERCENT)
-    Right_front.set_velocity(5, PERCENT)
-    LeftMotors.set_velocity(5, PERCENT)
-    Left_Front.set_velocity(5, PERCENT)
-    RightMotors.set_position(0, DEGREES)
-    Right_front.set_position(0, DEGREES)
+    # Reset motor encoders
     LeftMotors.set_position(0, DEGREES)
+    RightMotors.set_position(0, DEGREES)
     Left_Front.set_position(0, DEGREES)
+    Right_front.set_position(0, DEGREES)
 
-    # Save the initial heading from the IMU as the target heading
-    target_heading = Inertial21.rotation()  # desired heading for straight travel
+    # Capture the starting heading from the IMU
+    target_heading = Inertial21.rotation()
+
+    # Calculate the target encoder ticks from the desired distance
+    target_ticks = (distance_inches / WHEEL_CIRCUMFERENCE) * TICKS_PER_REV
 
     integral_distance = 0.0
-    previous_error_distance = 0.0
-    start_time = brain.timer.time(SECONDS)
+    last_error_distance = 0.0
+    start_time = brain.timer.time(SECONDS)  # Use Brain's timer
 
     while True:
-        # ----- Calculate Traveled Distance -----
-        # Read the left and right motor encoder values (in degrees)
-        left_deg = LeftMotors.position(DEGREES)+Left_Front.position(DEGREES)
-        right_deg = RightMotors.position(DEGREES)+ Right_front.position(DEGREES)
-        avg_deg = (left_deg + right_deg) / 4.0
+        # Read current encoder positions (in degrees)
+        left_ticks = LeftMotors.position(DEGREES)
+        right_ticks = RightMotors.position(DEGREES)
+        avg_ticks = (left_ticks + right_ticks) / 2.0
 
-        # Convert encoder degrees to inches.
-        # Adjust wheel_diameter if your wheels are not 4 inches.
-        wheel_diameter = 2.75  # inches  
-        wheel_circumference = wheel_diameter * math.pi  # inches per revolution
-        traveled_inches = (avg_deg / 360.0) * wheel_circumference
+        # Calculate error in distance (in encoder ticks)
+        error_distance = distance_inches - (((RightMotors.position(DEGREES)/360)*math.pi*2.75)+((Right_front.position(DEGREES)/360)*math.pi*2.75)+((LeftMotors.position(DEGREES)/360)*math.pi*2.75)+((Left_Front.position(DEGREES)/360)*math.pi*2.75)/4)
 
-        # ----- Distance Error Calculation -----
-        error_distance = distance_inches - traveled_inches
-
-        # Break out if we've reached our target (or timed out)
-        if abs(error_distance) < tolerance_distance or brain.timer.time(SECONDS) - start_time > timeout:
+        # Break if we're within tolerance or timeout has been exceeded
+        if abs(error_distance) < 0.6 or (brain.timer.time(SECONDS) - start_time) > timeout:
             break
 
-        # ----- PID Calculation for Distance -----
-        integral_distance += error_distance * dt
-        derivative_distance = (error_distance - previous_error_distance) / dt
-        previous_error_distance = error_distance
+        # Distance PID calculations
+        integral_distance += error_distance
+        derivative_distance = error_distance - last_error_distance
+        last_error_distance = error_distance
 
-        output_distance = (kP_distance * error_distance +
-                           kI_distance * integral_distance +
-                           kD_distance * derivative_distance)
+        pid_output = (kP_distance * error_distance +
+                      kI_distance * integral_distance +
+                      kD_distance * derivative_distance)
 
-        # Clamp the distance output to the maximum velocity
-        if output_distance > max_velocity:
-            output_distance = max_velocity
-        elif output_distance < -max_velocity:
-            output_distance = -max_velocity
-
-        # ----- Heading Correction using IMU -----
+        # Clamp the output to the maximum allowed velocity
+        pid_output = max(-max_velocity_percent, min(max_velocity_percent, pid_output))
+        controller_1.screen.set_cursor(1,1)
+        wait(0.2,SECONDS)
+        controller_1.screen.clear_screen()
+        controller_1.screen.print(error_distance)
+        # Heading correction using IMU
         current_heading = Inertial21.rotation()
-        error_heading = angle_diff(target_heading, current_heading)
-        output_heading = kP_angle * error_heading
+        error_heading = target_heading - current_heading
+        heading_correction = kP_heading * error_heading
 
-        # ----- Combine Distance and Heading Corrections -----
-        # For a differential drive:
-        left_output = output_distance + output_heading
-        right_output = output_distance - output_heading
+        # Combine outputs: Add heading correction to the left side and subtract from the right
+        left_output = pid_output + heading_correction
+        right_output = pid_output - heading_correction
 
-        # Clamp outputs to max_velocity limits
-        left_output = max(-max_velocity, min(max_velocity, left_output))
-        right_output = max(-max_velocity, min(max_velocity, right_output))
+        # Clamp motor outputs to the maximum allowed velocity
+        left_output = max(-max_velocity_percent, min(max_velocity_percent, left_output))
+        right_output = max(-max_velocity_percent, min(max_velocity_percent, right_output))
 
-        # Determine drive direction based on desired distance
-        if distance_inches >= 0:
-            left_spin_direction = REVERSE
-            right_spin_direction = FORWARD
-        else:
-            left_spin_direction = FORWARD
-            right_spin_direction = REVERSE
-
-        # ----- Command the Motors -----
+        # Set motor velocities
         LeftMotors.set_velocity(left_output, PERCENT)
-        Left_Front.set_velocity(left_output, PERCENT)
         RightMotors.set_velocity(right_output, PERCENT)
+        Left_Front.set_velocity(left_output, PERCENT)
         Right_front.set_velocity(right_output, PERCENT)
 
-        LeftMotors.spin(left_spin_direction)
-        Left_Front.spin(left_spin_direction)
-        RightMotors.spin(right_spin_direction)
-        Right_front.spin(right_spin_direction)
+        # Spin motors
+        LeftMotors.spin(REVERSE)
+        Left_Front.spin(REVERSE)
+        RightMotors.spin(FORWARD)
+        Right_front.spin(FORWARD)
 
-        wait(dt, SECONDS)
-
-    # ----- Stop all motors when done -----
-    LeftMotors.stop()
-    Left_Front.stop()
+    # Stop motors when the movement is complete
     RightMotors.stop()
     Right_front.stop()
+    LeftMotors.stop()
+    Left_Front.stop()
+
+# Example usage:
+# pid_drive(24, 50)  # Move forward 24 inches at 50% max velocity
 
 
 '''from MAIN_GB.main1 import *'''
 
 # PID Turn Function
 
-'''def pid_turn(target_angle, max_speed, timeout=3):
-    Kp = 0.7   # Proportional Gain
+def pid_turn(target_angle, max_speed, timeout=3):
+    Kp = 0.6   # Proportional Gain
     Ki = 0.0 # Integral Gain
-    Kd = 4   # Derivative Gain
+    Kd = 2.7  # Derivative Gain
 
     integral = 0
     previous_error = 0
@@ -738,7 +725,7 @@ def pid_drive(distance_inches, max_velocity, timeout=5.0):
         if abs(error) < threshold or (brain.timer.time(SECONDS) - start_time) > timeout:
             break
 
-        print(current_angle)
+
 
         # PID Calculations
         integral += error
@@ -765,13 +752,13 @@ def pid_drive(distance_inches, max_velocity, timeout=5.0):
     LeftMotors.stop()
     RightMotors.stop()
     Left_Front.stop()
-    Right_front.stop()'''
+    Right_front.stop()
 
 
 
 
 # PID Turn Function
-def pid_turn(target_angle, max_speed, timeout=3):
+'''def pid_turn(target_angle, max_speed, timeout=3):
     Kp = 0.7   # Proportional Gain
     Ki = 0.0   # Integral Gain
     Kd = 4     # Derivative Gain
@@ -807,7 +794,7 @@ def pid_turn(target_angle, max_speed, timeout=3):
         power = max(min(power, max_speed), -max_speed)  # Limit speed
 
         # Determine direction automatically
-        if power > 0:  # Clockwise (right turn)
+        if max_speed > 0:  # Clockwise (right turn)
             LeftMotors.set_velocity(power, PERCENT)
             Left_Front.set_velocity(power, PERCENT)
             RightMotors.set_velocity(power, PERCENT)  # Reverse right side
@@ -828,7 +815,7 @@ def pid_turn(target_angle, max_speed, timeout=3):
     LeftMotors.stop()
     RightMotors.stop()
     Left_Front.stop()
-    Right_front.stop()
+    Right_front.stop()'''
 
 
 
@@ -842,9 +829,11 @@ def onauton_autonomous_0():
     while Inertial21.is_calibrating():
         sleep(50)
     stop_initialize.broadcast()
-    pid_turn(180,80)
 
-  
+ 
+    pid_drive(80, 100)
+    pid_turn(90,50)
+    '''Forward_PID_Distance_Max_Speed(48,-60)'''
 
 
 

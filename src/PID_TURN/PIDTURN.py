@@ -4,10 +4,10 @@
 
 # PID Turn Function
 
-'''def pid_turn(target_angle, max_speed, timeout=3):
-    Kp = 0.7   # Proportional Gain
+def pid_turn(target_angle, max_speed, timeout=3):
+    Kp = 0.6   # Proportional Gain
     Ki = 0.0 # Integral Gain
-    Kd = 4   # Derivative Gain
+    Kd = 2.7  # Derivative Gain
 
     integral = 0
     previous_error = 0
@@ -26,7 +26,7 @@
         if abs(error) < threshold or (brain.timer.time(SECONDS) - start_time) > timeout:
             break
 
-        print(current_angle)
+
 
         # PID Calculations
         integral += error
@@ -53,13 +53,13 @@
     LeftMotors.stop()
     RightMotors.stop()
     Left_Front.stop()
-    Right_front.stop()'''
+    Right_front.stop()
 
 
 
 
 # PID Turn Function
-def pid_turn(target_angle, max_speed, timeout=3):
+'''def pid_turn(target_angle, max_speed, timeout=3):
     Kp = 0.7   # Proportional Gain
     Ki = 0.0   # Integral Gain
     Kd = 4     # Derivative Gain
@@ -95,7 +95,7 @@ def pid_turn(target_angle, max_speed, timeout=3):
         power = max(min(power, max_speed), -max_speed)  # Limit speed
 
         # Determine direction automatically
-        if power > 0:  # Clockwise (right turn)
+        if max_speed > 0:  # Clockwise (right turn)
             LeftMotors.set_velocity(power, PERCENT)
             Left_Front.set_velocity(power, PERCENT)
             RightMotors.set_velocity(power, PERCENT)  # Reverse right side
@@ -116,6 +116,6 @@ def pid_turn(target_angle, max_speed, timeout=3):
     LeftMotors.stop()
     RightMotors.stop()
     Left_Front.stop()
-    Right_front.stop()
+    Right_front.stop()'''
 
 
