@@ -11,7 +11,7 @@ def onauton_autonomous_0():
     stop_initialize.broadcast()
 
  
-    pid_drive(80, 100)
+    pid_drive(24, 20)
     pid_turn(90,50)
     '''Forward_PID_Distance_Max_Speed(48,-60)'''
 
