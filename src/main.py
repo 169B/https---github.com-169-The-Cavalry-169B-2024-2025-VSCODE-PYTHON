@@ -172,7 +172,7 @@ def onevent_controller_1buttonL1_pressed_0():
     """ Scroll to the NEXT autonomous mode """
     global AutoSelect
     AutoSelect = (AutoSelect + 1) % len(auto_modes)
-    controller_1.rumble(".-")  
+    controller_1.rumble("-.-")  
     fancy_scroll_effect()
 
 def onevent_controller_1buttonL2_pressed_0():
@@ -279,7 +279,7 @@ def onevent_controller_1axis3Changed_0():
 import math
 
 # Function to limit how fast the output can change (slew rate limiting)
-def slew_rate_limit(current, previous, max_delta=2):
+def slew_rate_limit(current, previous, max_delta=9):
     delta = current - previous
     if abs(delta) > max_delta:
         return previous + max_delta * (1 if delta > 0 else -1)
@@ -383,6 +383,7 @@ def ondriver_drivercontrol_4():
     Lady_Brown.set_timeout(1, SECONDS)
     Lady_Brown.set_velocity(40, PERCENT)
     while True:
+        
         if controller_1.buttonDown.pressing() and 198 < rotation_15.position(DEGREES):
             Lady_Brown.set_velocity(40, PERCENT)
             Lady_Brown.set_stopping(COAST)
@@ -581,6 +582,7 @@ controller_1.axis2.changed(onevent_controller_1axis2Changed_0)
 controller_1.axis3.changed(onevent_controller_1axis3Changed_0)
 stop_initialize(onevent_stop_initialize_0)
 controller_1.buttonL1.pressed(onevent_controller_1buttonL1_pressed_0)
+controller_1.buttonL2.pressed(onevent_controller_1buttonL2_pressed_0)
 # add 15ms delay to make sure events are registered correctly.
 wait(15, MSEC)
 
@@ -591,10 +593,7 @@ ws5 = Thread( when_started5 )
 
 import math
 
-# Constants
-WHEEL_DIAMETER = 2.75  # inches
-WHEEL_CIRCUMFERENCE = WHEEL_DIAMETER * math.pi  # inches per revolution
-TICKS_PER_REV = 360  # Encoder ticks per revolution (degrees)
+
 
 # PID Constants for Distance Control
 kP_distance = 2.0
@@ -629,18 +628,12 @@ def pid_drive(distance_inches, max_velocity_percent, timeout=20.0):
     # Capture the starting heading from the IMU
     target_heading = Inertial21.rotation()
 
-    # Calculate the target encoder ticks from the desired distance
-    target_ticks = (distance_inches / WHEEL_CIRCUMFERENCE) * TICKS_PER_REV
 
     integral_distance = 0.0
     last_error_distance = 0.0
     start_time = brain.timer.time(SECONDS)  # Use Brain's timer
 
     while True:
-        # Read current encoder positions (in degrees)
-        left_ticks = LeftMotors.position(DEGREES)
-        right_ticks = RightMotors.position(DEGREES)
-        avg_ticks = (left_ticks + right_ticks) / 2.0
 
         # Calculate error in distance (in encoder ticks)
         error_distance = distance_inches - (((RightMotors.position(DEGREES)/360)*math.pi*2.75)+((Right_front.position(DEGREES)/360)*math.pi*2.75)+((LeftMotors.position(DEGREES)/360)*math.pi*2.75)+((Left_Front.position(DEGREES)/360)*math.pi*2.75)/4)
@@ -660,10 +653,7 @@ def pid_drive(distance_inches, max_velocity_percent, timeout=20.0):
 
         # Clamp the output to the maximum allowed velocity
         pid_output = max(-max_velocity_percent, min(max_velocity_percent, pid_output))
-        controller_1.screen.set_cursor(1,1)
-        wait(0.2,SECONDS)
-        controller_1.screen.clear_screen()
-        controller_1.screen.print(error_distance)
+        
         # Heading correction using IMU
         current_heading = Inertial21.rotation()
         error_heading = target_heading - current_heading
@@ -695,8 +685,6 @@ def pid_drive(distance_inches, max_velocity_percent, timeout=20.0):
     LeftMotors.stop()
     Left_Front.stop()
 
-# Example usage:
-# pid_drive(24, 50)  # Move forward 24 inches at 50% max velocity
 
 
 '''from MAIN_GB.main1 import *'''
@@ -707,10 +695,13 @@ def pid_turn(target_angle, max_speed, timeout=3):
     Kp = 0.6   # Proportional Gain
     Ki = 0.0 # Integral Gain
     Kd = 2.7  # Derivative Gain
+    '''Kp = 0.6   # Proportional Gain
+    Ki = 0.0 # Integral Gain
+    Kd = 2.7  # Derivative Gain'''
 
     integral = 0
     previous_error = 0
-    threshold = 1.5  # Acceptable error in degrees
+    threshold = 0.1  # Acceptable error in degrees
     start_time = brain.timer.time(SECONDS)
 
     # Reset IMU Heading
@@ -724,7 +715,10 @@ def pid_turn(target_angle, max_speed, timeout=3):
         # If within acceptable range, stop
         if abs(error) < threshold or (brain.timer.time(SECONDS) - start_time) > timeout:
             break
-
+        controller_1.screen.set_cursor(1,1)
+        wait(0.2,SECONDS)
+        controller_1.screen.clear_screen()
+        controller_1.screen.print(error)
 
 
         # PID Calculations
@@ -831,8 +825,10 @@ def onauton_autonomous_0():
     stop_initialize.broadcast()
 
  
-    pid_drive(24, 20)
-    pid_turn(90,50)
+    pid_drive(24, 70)
+    
+    pid_turn(180,50)
+    
     '''Forward_PID_Distance_Max_Speed(48,-60)'''
 
 

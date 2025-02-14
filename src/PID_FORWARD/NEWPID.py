@@ -1,9 +1,6 @@
 import math
 
-# Constants
-WHEEL_DIAMETER = 2.75  # inches
-WHEEL_CIRCUMFERENCE = WHEEL_DIAMETER * math.pi  # inches per revolution
-TICKS_PER_REV = 360  # Encoder ticks per revolution (degrees)
+
 
 # PID Constants for Distance Control
 kP_distance = 2.0
@@ -38,18 +35,12 @@ def pid_drive(distance_inches, max_velocity_percent, timeout=20.0):
     # Capture the starting heading from the IMU
     target_heading = Inertial21.rotation()
 
-    # Calculate the target encoder ticks from the desired distance
-    target_ticks = (distance_inches / WHEEL_CIRCUMFERENCE) * TICKS_PER_REV
 
     integral_distance = 0.0
     last_error_distance = 0.0
     start_time = brain.timer.time(SECONDS)  # Use Brain's timer
 
     while True:
-        # Read current encoder positions (in degrees)
-        left_ticks = LeftMotors.position(DEGREES)
-        right_ticks = RightMotors.position(DEGREES)
-        avg_ticks = (left_ticks + right_ticks) / 2.0
 
         # Calculate error in distance (in encoder ticks)
         error_distance = distance_inches - (((RightMotors.position(DEGREES)/360)*math.pi*2.75)+((Right_front.position(DEGREES)/360)*math.pi*2.75)+((LeftMotors.position(DEGREES)/360)*math.pi*2.75)+((Left_Front.position(DEGREES)/360)*math.pi*2.75)/4)
@@ -69,10 +60,7 @@ def pid_drive(distance_inches, max_velocity_percent, timeout=20.0):
 
         # Clamp the output to the maximum allowed velocity
         pid_output = max(-max_velocity_percent, min(max_velocity_percent, pid_output))
-        controller_1.screen.set_cursor(1,1)
-        wait(0.2,SECONDS)
-        controller_1.screen.clear_screen()
-        controller_1.screen.print(error_distance)
+        
         # Heading correction using IMU
         current_heading = Inertial21.rotation()
         error_heading = target_heading - current_heading
@@ -104,5 +92,3 @@ def pid_drive(distance_inches, max_velocity_percent, timeout=20.0):
     LeftMotors.stop()
     Left_Front.stop()
 
-# Example usage:
-# pid_drive(24, 50)  # Move forward 24 inches at 50% max velocity

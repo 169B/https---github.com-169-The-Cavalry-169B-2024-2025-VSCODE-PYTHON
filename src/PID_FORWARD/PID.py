@@ -104,6 +104,7 @@ controller_1.axis2.changed(onevent_controller_1axis2Changed_0)
 controller_1.axis3.changed(onevent_controller_1axis3Changed_0)
 stop_initialize(onevent_stop_initialize_0)
 controller_1.buttonL1.pressed(onevent_controller_1buttonL1_pressed_0)
+controller_1.buttonL2.pressed(onevent_controller_1buttonL2_pressed_0)
 # add 15ms delay to make sure events are registered correctly.
 wait(15, MSEC)
 

@@ -8,10 +8,13 @@ def pid_turn(target_angle, max_speed, timeout=3):
     Kp = 0.6   # Proportional Gain
     Ki = 0.0 # Integral Gain
     Kd = 2.7  # Derivative Gain
+    '''Kp = 0.6   # Proportional Gain
+    Ki = 0.0 # Integral Gain
+    Kd = 2.7  # Derivative Gain'''
 
     integral = 0
     previous_error = 0
-    threshold = 1.5  # Acceptable error in degrees
+    threshold = 0.1  # Acceptable error in degrees
     start_time = brain.timer.time(SECONDS)
 
     # Reset IMU Heading
@@ -25,7 +28,10 @@ def pid_turn(target_angle, max_speed, timeout=3):
         # If within acceptable range, stop
         if abs(error) < threshold or (brain.timer.time(SECONDS) - start_time) > timeout:
             break
-
+        controller_1.screen.set_cursor(1,1)
+        wait(0.2,SECONDS)
+        controller_1.screen.clear_screen()
+        controller_1.screen.print(error)
 
 
         # PID Calculations

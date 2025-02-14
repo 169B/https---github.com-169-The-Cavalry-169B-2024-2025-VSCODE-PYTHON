@@ -37,7 +37,7 @@ def onevent_controller_1buttonL1_pressed_0():
     """ Scroll to the NEXT autonomous mode """
     global AutoSelect
     AutoSelect = (AutoSelect + 1) % len(auto_modes)
-    controller_1.rumble(".-")  
+    controller_1.rumble("-.-")  
     fancy_scroll_effect()
 
 def onevent_controller_1buttonL2_pressed_0():

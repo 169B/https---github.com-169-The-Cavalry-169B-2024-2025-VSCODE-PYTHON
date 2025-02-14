@@ -83,7 +83,7 @@ def onevent_controller_1axis3Changed_0():
 import math
 
 # Function to limit how fast the output can change (slew rate limiting)
-def slew_rate_limit(current, previous, max_delta=2):
+def slew_rate_limit(current, previous, max_delta=9):
     delta = current - previous
     if abs(delta) > max_delta:
         return previous + max_delta * (1 if delta > 0 else -1)
