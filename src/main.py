@@ -644,46 +644,81 @@ def pid_drive(distance_inches, max_velocity_percent, timeout=20.0):
     LeftMotors.stop()
     Left_Front.stop()
 
-
-
 def pid_turn(target_heading, max_velocity, momentum):
     global Inertial21, RightMotors, Right_front, LeftMotors, Left_Front
     
-    Inertial21.set_rotation(0, DEGREES)  # Reset IMU
+    # PID Constants (Tweak for best performance)
+    Kp = 0.35  # Increased proportional gain for faster response
+    Ki = 0.00005  # Further reduced integral gain to minimize overshoot
+    Kd = 0.05  # Reduced derivative gain to avoid excessive damping
+
+    # Get current heading (DO NOT RESET IMU)
+    start_heading = Inertial21.rotation(DEGREES)
+    target = start_heading + target_heading  # Adjust for relative turning
+
+    # Initialize PID variables
+    prev_error = 0
+    integral = 0
+    import time
+    start_time = time.time()  # Timeout start time
 
     while True:
-        # Calculate remaining degrees to turn
-        error = target_heading - Inertial21.rotation(DEGREES)
+        # Calculate error (how far from target)
+        error = target - Inertial21.rotation(DEGREES)
 
         # Stop if within momentum threshold
-        if abs(error) < momentum:
+        if abs(error) < max(momentum, 1):  
             break
 
-        # Gradually reduce speed as robot approaches target
-        speed = max_velocity * (abs(error) / max(abs(target_heading), 1))  # Prevent division by zero
-        speed = max(speed, 5)  # Ensure a small minimum speed to prevent stalling
+        # Timeout safety to prevent infinite loops
+        if time.time() - start_time > 5:  # 5-second timeout
+            break
+
+        # PID calculations
+        integral += error  # Accumulate error over time
+        derivative = error - prev_error  # Change in error
+        prev_error = error  # Store current error
+
+        # Compute PID output
+        speed = (Kp * error) + (Ki * integral) + (Kd * derivative)
+
+        # Slow down near the target to prevent overshoot (steeper exponential decay)
+        speed *= max(0.2, 1 - (abs(error) / target_heading) ** 2)  # Steeper decay
+
+        # Limit speed to max_velocity and reasonable minimum
+        speed = max(min(speed, max_velocity), 20)  # Minimum speed = 20%
+
+        # Small Deadband to stop oscillation (error < 2 degrees)
+        if abs(error) < 2:
+            speed = 0  # Stop robot to prevent oscillation
+
+        # Debugging feedback on controller screen
         controller_1.screen.clear_screen()
         wait(0.02, SECONDS)
         controller_1.screen.set_cursor(1,1)
         controller_1.screen.print(error)
 
-        # Apply speed to motors
-        RightMotors.set_velocity(speed, PERCENT)
-        Right_front.set_velocity(speed, PERCENT)
-        LeftMotors.set_velocity(speed, PERCENT)
-        Left_Front.set_velocity(speed, PERCENT)
+        # Apply speed to motors for turning
+        if error > 0:  # Turn RIGHT
+            RightMotors.set_velocity(speed, PERCENT)
+            Right_front.set_velocity(speed, PERCENT)
+            LeftMotors.set_velocity(speed, PERCENT)
+            Left_Front.set_velocity(speed, PERCENT)
 
-        # Set direction
-        if error > 0:
-            RightMotors.spin(REVERSE)
+            RightMotors.spin(REVERSE)  # Reverse for right turn
             Right_front.spin(REVERSE)
-            LeftMotors.spin(FORWARD)
-            Left_Front.spin(FORWARD)
-        else:
-            RightMotors.spin(FORWARD)
-            Right_front.spin(FORWARD)
-            LeftMotors.spin(REVERSE)
+            LeftMotors.spin(REVERSE)  # Forward for right turn
             Left_Front.spin(REVERSE)
+        else:  # Turn LEFT
+            RightMotors.set_velocity(speed, PERCENT)
+            Right_front.set_velocity(speed, PERCENT)
+            LeftMotors.set_velocity(speed, PERCENT)
+            Left_Front.set_velocity(speed, PERCENT)
+
+            RightMotors.spin(FORWARD)  # Forward for left turn
+            Right_front.spin(FORWARD)
+            LeftMotors.spin(FORWARD)  # Reverse for left turn
+            Left_Front.spin(FORWARD)
 
         wait(10, MSEC)  # Small delay for smooth updates
 
@@ -692,6 +727,9 @@ def pid_turn(target_heading, max_velocity, momentum):
     LeftMotors.stop()
     Right_front.stop()
     Left_Front.stop()
+
+
+
 
 
 
@@ -753,7 +791,7 @@ def onauton_autonomous_0():
     while Inertial21.is_calibrating():
         sleep(50)
     stop_initialize.broadcast()
-    pid_turn(90, 60, 0)
+    pid_turn(90, 100, 0)
 
     
     
