@@ -9,11 +9,14 @@ def onauton_autonomous_0():
     while Inertial21.is_calibrating():
         sleep(50)
     stop_initialize.broadcast()
+    wait(0.5, SECONDS)
+    pid_turn(180, 100, 0)
+    wait(0.5, SECONDS)
+    pid_turn(180, 100, 0)
+    wait(0.5, SECONDS)
     pid_turn(90, 100, 0)
 
-    
-    
-    '''Forward_PID_Distance_Max_Speed(48,-60)'''
+    '''pid_drive(24, 60)'''
 
 
 

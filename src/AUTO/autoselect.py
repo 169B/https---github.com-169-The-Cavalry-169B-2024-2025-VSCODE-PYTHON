@@ -1,6 +1,6 @@
 import time
 
-# Autonomous Mode Options (Formatted for VEX Controller)
+'''# Autonomous Mode Options (Formatted for VEX Controller)
 auto_modes = [
     "[NO AUTO]",
     "[RED LEFT RING]",
@@ -68,4 +68,4 @@ def when_started5():
         controller_1.screen.print(".")
         wait(200, MSEC)
 
-    update_auto_display()  # Show initial auto mode
+    update_auto_display()  # Show initial auto mode'''
