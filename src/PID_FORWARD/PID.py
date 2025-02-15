@@ -65,51 +65,5 @@ def Forward_PID_Distance_Max_Speed(Forward_PID_Distance_Max_Speed__Distance, For
 
 
 # create a function for handling the starting and stopping of all autonomous tasks
-def vexcode_auton_function():
-    # Start the autonomous control tasks
-    
-    auton_task_0 = Thread( onauton_autonomous_0 )
-    # wait for the driver control period to end
-    while( competition.is_autonomous() and competition.is_enabled() ):
-        # wait 10 milliseconds before checking again
-        wait( 10, MSEC )
-    # Stop the autonomous control tasks
-    auton_task_0.stop()
 
-def vexcode_driver_function():
-    # Start the driver control tasks
-    driver_control_task_0 = Thread( ondriver_drivercontrol_0 )
-    driver_control_task_1 = Thread( ondriver_drivercontrol_1 )
-    driver_control_task_2 = Thread( ondriver_drivercontrol_2 )
-    driver_control_task_3 = Thread( ondriver_drivercontrol_3 )
-    driver_control_task_4 = Thread( ondriver_drivercontrol_4 )
-
-    # wait for the driver control period to end
-    while( competition.is_driver_control() and competition.is_enabled() ):
-        # wait 10 milliseconds before checking again
-        wait( 10, MSEC )
-    # Stop the driver control tasks
-    driver_control_task_0.stop()
-    driver_control_task_1.stop()
-    driver_control_task_2.stop()
-    driver_control_task_3.stop()
-    driver_control_task_4.stop()
-
-
-# register the competition functions
-competition = Competition( vexcode_driver_function, vexcode_auton_function )
-
-# system event handlers
-controller_1.axis2.changed(onevent_controller_1axis2Changed_0)
-controller_1.axis3.changed(onevent_controller_1axis3Changed_0)
-stop_initialize(onevent_stop_initialize_0)
-controller_1.buttonL1.pressed(onevent_controller_1buttonL1_pressed_0)
-controller_1.buttonL2.pressed(onevent_controller_1buttonL2_pressed_0)
-# add 15ms delay to make sure events are registered correctly.
-wait(15, MSEC)
-
-ws2 = Thread( when_started2 )
-ws3 = Thread( when_started3 )
-ws4 = Thread( when_started4 )
-ws5 = Thread( when_started5 )
 

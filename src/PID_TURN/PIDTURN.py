@@ -1,127 +1,98 @@
 
 
-'''from MAIN_GB.main1 import *'''
-
-# PID Turn Function
-
-def pid_turn(target_angle, max_speed, timeout=3):
-    Kp = 0.6   # Proportional Gain
-    Ki = 0.0 # Integral Gain
-    Kd = 2.7  # Derivative Gain
-    '''Kp = 0.6   # Proportional Gain
-    Ki = 0.0 # Integral Gain
-    Kd = 2.7  # Derivative Gain'''
-
-    integral = 0
-    previous_error = 0
-    threshold = 0.1  # Acceptable error in degrees
-    start_time = brain.timer.time(SECONDS)
-
-    # Reset IMU Heading
-    Inertial21.set_rotation(0, DEGREES)
+def pid_turn(target_heading, max_velocity, momentum):
+    global Inertial21, RightMotors, Right_front, LeftMotors, Left_Front
     
-    while True:
-        # Get current heading
-        current_angle = Inertial21.rotation(DEGREES)
-        error = target_angle - current_angle
+    Inertial21.set_rotation(0, DEGREES)  # Reset IMU
 
-        # If within acceptable range, stop
-        if abs(error) < threshold or (brain.timer.time(SECONDS) - start_time) > timeout:
+    while True:
+        # Calculate remaining degrees to turn
+        error = target_heading - Inertial21.rotation(DEGREES)
+
+        # Stop if within momentum threshold
+        if abs(error) < momentum:
             break
-        controller_1.screen.set_cursor(1,1)
-        wait(0.2,SECONDS)
+
+        # Gradually reduce speed as robot approaches target
+        speed = max_velocity * (abs(error) / max(abs(target_heading), 1))  # Prevent division by zero
+        speed = max(speed, 5)  # Ensure a small minimum speed to prevent stalling
         controller_1.screen.clear_screen()
+        wait(0.02, SECONDS)
+        controller_1.screen.set_cursor(1,1)
         controller_1.screen.print(error)
 
+        # Apply speed to motors
+        RightMotors.set_velocity(speed, PERCENT)
+        Right_front.set_velocity(speed, PERCENT)
+        LeftMotors.set_velocity(speed, PERCENT)
+        Left_Front.set_velocity(speed, PERCENT)
 
-        # PID Calculations
-        integral += error
-        derivative = error - previous_error
-        previous_error = error
+        # Set direction
+        if error > 0:
+            RightMotors.spin(REVERSE)
+            Right_front.spin(REVERSE)
+            LeftMotors.spin(FORWARD)
+            Left_Front.spin(FORWARD)
+        else:
+            RightMotors.spin(FORWARD)
+            Right_front.spin(FORWARD)
+            LeftMotors.spin(REVERSE)
+            Left_Front.spin(REVERSE)
 
-        power = -(Kp * error) + (Ki * integral) + (Kd * derivative)
-        power = max(min(power, max_speed), -max_speed)  # Limit speed
+        wait(10, MSEC)  # Small delay for smooth updates
 
-
-        # Apply power to motors for turning
-        LeftMotors.set_velocity(power, PERCENT)
-        RightMotors.set_velocity(power, PERCENT)
-        Left_Front.set_velocity(power, PERCENT)
-        Right_front.set_velocity(power, PERCENT)
-        
-
-        LeftMotors.spin(FORWARD)
-        RightMotors.spin(FORWARD)
-        Left_Front.spin(FORWARD)
-        Right_front.spin(FORWARD)
-
-    # Stop motors after turn
-    LeftMotors.stop()
+    # Stop motors after reaching target
     RightMotors.stop()
-    Left_Front.stop()
+    LeftMotors.stop()
     Right_front.stop()
-
-
-
-
-# PID Turn Function
-'''def pid_turn(target_angle, max_speed, timeout=3):
-    Kp = 0.7   # Proportional Gain
-    Ki = 0.0   # Integral Gain
-    Kd = 4     # Derivative Gain
-
-    integral = 0
-    previous_error = 0
-    threshold = 1.5  # Acceptable error in degrees
-    start_time = brain.timer.time(SECONDS)
-
-    # Reset IMU Heading
-    Inertial21.set_rotation(0, DEGREES)
-
-    while True:
-        # Get current heading
-        current_angle = Inertial21.rotation(DEGREES)
-        error = target_angle - current_angle
-
-        # Normalize the error to the shortest turn direction (-180 to 180 range)
-        error = (error + 180) % 360 - 180
-
-        # If within acceptable range, stop
-        if abs(error) < threshold or (brain.timer.time(SECONDS) - start_time) > timeout:
-            break
-
- 
-
-        # PID Calculations
-        integral += error
-        derivative = error - previous_error
-        previous_error = error
-
-        power = -(Kp * error) + (Ki * integral) + (Kd * derivative)
-        power = max(min(power, max_speed), -max_speed)  # Limit speed
-
-        # Determine direction automatically
-        if max_speed > 0:  # Clockwise (right turn)
-            LeftMotors.set_velocity(power, PERCENT)
-            Left_Front.set_velocity(power, PERCENT)
-            RightMotors.set_velocity(power, PERCENT)  # Reverse right side
-            Right_front.set_velocity(power, PERCENT)
-        else:  # Counterclockwise (left turn)
-            LeftMotors.set_velocity(-power, PERCENT)  # Reverse left side
-            Left_Front.set_velocity(-power, PERCENT)
-            RightMotors.set_velocity(-power, PERCENT)  
-            Right_front.set_velocity(-power, PERCENT)
-
-        # Spin motors
-        LeftMotors.spin(FORWARD)
-        Left_Front.spin(FORWARD)
-        RightMotors.spin(FORWARD)
-        Right_front.spin(FORWARD)
-
-    # Stop motors after turn
-    LeftMotors.stop()
-    RightMotors.stop()
     Left_Front.stop()
-    Right_front.stop()'''
 
 
+
+def vexcode_auton_function():
+    # Start the autonomous control tasks
+    
+    auton_task_0 = Thread( onauton_autonomous_0 )
+    # wait for the driver control period to end
+    while( competition.is_autonomous() and competition.is_enabled() ):
+        # wait 10 milliseconds before checking again
+        wait( 10, MSEC )
+    # Stop the autonomous control tasks
+    auton_task_0.stop()
+
+def vexcode_driver_function():
+    # Start the driver control tasks
+    driver_control_task_0 = Thread( ondriver_drivercontrol_0 )
+    driver_control_task_1 = Thread( ondriver_drivercontrol_1 )
+    driver_control_task_2 = Thread( ondriver_drivercontrol_2 )
+    driver_control_task_3 = Thread( ondriver_drivercontrol_3 )
+    driver_control_task_4 = Thread( ondriver_drivercontrol_4 )
+
+    # wait for the driver control period to end
+    while( competition.is_driver_control() and competition.is_enabled() ):
+        # wait 10 milliseconds before checking again
+        wait( 10, MSEC )
+    # Stop the driver control tasks
+    driver_control_task_0.stop()
+    driver_control_task_1.stop()
+    driver_control_task_2.stop()
+    driver_control_task_3.stop()
+    driver_control_task_4.stop()
+
+
+# register the competition functions
+competition = Competition( vexcode_driver_function, vexcode_auton_function )
+
+# system event handlers
+controller_1.axis2.changed(onevent_controller_1axis2Changed_0)
+controller_1.axis3.changed(onevent_controller_1axis3Changed_0)
+stop_initialize(onevent_stop_initialize_0)
+controller_1.buttonL1.pressed(onevent_controller_1buttonL1_pressed_0)
+controller_1.buttonL2.pressed(onevent_controller_1buttonL2_pressed_0)
+# add 15ms delay to make sure events are registered correctly.
+wait(15, MSEC)
+
+ws2 = Thread( when_started2 )
+ws3 = Thread( when_started3 )
+ws4 = Thread( when_started4 )
+ws5 = Thread( when_started5 )

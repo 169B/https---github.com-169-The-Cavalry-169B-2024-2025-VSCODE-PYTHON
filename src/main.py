@@ -1,3 +1,65 @@
+import time
+
+# Autonomous Mode Options (Formatted for VEX Controller)
+auto_modes = [
+    "[NO AUTO]",
+    "[RED LEFT RING]",
+    "[BLUE RIGHT RING]",
+    "[RED RIGHT STAKE]",
+    "[BLUE LEFT STAKE]"
+]
+
+AutoSelect = 0  # Default to NO AUTO
+
+def update_auto_display():
+    """ Updates the controller screen with a simple animation effect """
+    controller_1.screen.clear_screen()
+    controller_1.screen.set_cursor(1, 1)
+    
+    # Display Auto Mode Name
+    controller_1.screen.print(auto_modes[AutoSelect])
+
+    # Show Navigation Controls
+    controller_1.screen.set_cursor(2, 1)
+    controller_1.screen.print("<< SELECT >>")
+
+    # Rumble Feedback
+    controller_1.rumble(".")
+
+def fancy_scroll_effect():
+    """ Creates a quick flashing effect when switching modes """
+    for _ in range(2):
+        controller_1.screen.clear_screen()
+        wait(50, MSEC)
+        update_auto_display()
+
+def onevent_controller_1buttonL1_pressed_0():
+    """ Scroll to the NEXT autonomous mode """
+    global AutoSelect
+    AutoSelect = (AutoSelect + 1) % len(auto_modes)
+    controller_1.rumble("-.-")  
+    fancy_scroll_effect()
+
+def onevent_controller_1buttonL2_pressed_0():
+    """ Scroll to the PREVIOUS autonomous mode """
+    global AutoSelect
+    AutoSelect = (AutoSelect - 1) % len(auto_modes)
+    controller_1.rumble("-..")  
+    fancy_scroll_effect()
+
+def when_started5():
+    """ Initialize the auto selector with a clean display """
+    controller_1.screen.clear_screen()
+    controller_1.screen.set_cursor(1, 1)
+    controller_1.screen.print("AUTO SELECT MODE")
+
+    # Quick Flashing Effect
+    for _ in range(3):
+        controller_1.screen.print(".")
+        wait(200, MSEC)
+
+    update_auto_display()  # Show first selection'''
+
 #region VEXcode Generated Robot Configuration
 from vex import *
 '''from DRIVER_FUNCTIONS.drive import ondriver_drivercontrol_0, ondriver_drivercontrol_1, ondriver_drivercontrol_2, ondriver_drivercontrol_3, onauton_autonomous_0, onevent_controller_1axis2Changed_0, onevent_controller_1axis3Changed_0
@@ -133,67 +195,6 @@ Distance2 = 0
 Turn_Angle = 0
 
 
-import time
-
-# Autonomous Mode Options (Formatted for VEX Controller)
-auto_modes = [
-    "[NO AUTO]",
-    "[RED LEFT RING]",
-    "[BLUE RIGHT RING]",
-    "[RED RIGHT STAKE]",
-    "[BLUE LEFT STAKE]"
-]
-
-AutoSelect = 0  # Default to NO AUTO
-
-def update_auto_display():
-    """ Updates the controller screen with a simple animation effect """
-    controller_1.screen.clear_screen()
-    controller_1.screen.set_cursor(1, 1)
-    
-    # Display Auto Mode Name
-    controller_1.screen.print(auto_modes[AutoSelect])
-
-    # Show Navigation Controls
-    controller_1.screen.set_cursor(2, 1)
-    controller_1.screen.print("<< SELECT >>")
-
-    # Rumble Feedback
-    controller_1.rumble(".")
-
-def fancy_scroll_effect():
-    """ Creates a quick flashing effect when switching modes """
-    for _ in range(2):
-        controller_1.screen.clear_screen()
-        wait(50, MSEC)
-        update_auto_display()
-
-def onevent_controller_1buttonL1_pressed_0():
-    """ Scroll to the NEXT autonomous mode """
-    global AutoSelect
-    AutoSelect = (AutoSelect + 1) % len(auto_modes)
-    controller_1.rumble("-.-")  
-    fancy_scroll_effect()
-
-def onevent_controller_1buttonL2_pressed_0():
-    """ Scroll to the PREVIOUS autonomous mode """
-    global AutoSelect
-    AutoSelect = (AutoSelect - 1) % len(auto_modes)
-    controller_1.rumble("-..")  
-    fancy_scroll_effect()
-
-def when_started5():
-    """ Initialize the auto selector with a clean display """
-    controller_1.screen.clear_screen()
-    controller_1.screen.set_cursor(1, 1)
-    controller_1.screen.print("AUTO SELECT MODE")
-
-    # Quick Flashing Effect
-    for _ in range(3):
-        controller_1.screen.print(".")
-        wait(200, MSEC)
-
-    update_auto_display()  # Show first selection'''
 
 def onevent_controller_1axis2Changed_0():
     global Right_Axis, dead_zone_range
@@ -543,6 +544,157 @@ def Forward_PID_Distance_Max_Speed(Forward_PID_Distance_Max_Speed__Distance, For
 
 
 # create a function for handling the starting and stopping of all autonomous tasks
+
+
+import math
+
+
+
+# PID Constants for Distance Control
+kP_distance = 1.2
+kI_distance = 0.0  
+kD_distance = 0.1
+
+# PID Constant for Heading Correction
+kP_heading = 0.1
+
+def pid_drive(distance_inches, max_velocity_percent, timeout=20.0):
+
+    LeftMotors.set_stopping(BRAKE)
+    RightMotors.set_stopping(BRAKE)
+    Left_Front.set_stopping(BRAKE)
+    Right_front.set_stopping(BRAKE)
+    """
+    Drives the robot forward for a given distance (in inches) with PID control 
+    and IMU-based heading correction.
+
+    Args:
+        distance_inches (float): Target distance to move (in inches).
+        max_velocity_percent (float): Maximum motor speed (0-100%).
+        timeout (float): Maximum time allowed for movement (seconds).
+    """
+
+    # Reset motor encoders
+    LeftMotors.set_position(0, DEGREES)
+    RightMotors.set_position(0, DEGREES)
+    Left_Front.set_position(0, DEGREES)
+    Right_front.set_position(0, DEGREES)
+
+    # Capture the starting heading from the IMU
+    target_heading = Inertial21.rotation()
+
+
+    integral_distance = 0.0
+    last_error_distance = 0.0
+    start_time = brain.timer.time(SECONDS)  # Use Brain's timer
+
+    while True:
+
+        # Calculate error in distance (in encoder ticks)
+        error_distance = distance_inches - (((RightMotors.position(DEGREES)/360)*math.pi*2.75)+((Right_front.position(DEGREES)/360)*math.pi*2.75)+((LeftMotors.position(DEGREES)/360)*math.pi*2.75)+((Left_Front.position(DEGREES)/360)*math.pi*2.75)/4)
+
+        # Break if we're within tolerance or timeout has been exceeded
+        if abs(error_distance) < 1 or (brain.timer.time(SECONDS) - start_time) > timeout:
+            break
+        controller_1.screen.set_cursor(1,1)
+        wait(0.2,SECONDS)
+        controller_1.screen.clear_screen()
+        controller_1.screen.print(error_distance)
+
+        # Distance PID calculations
+        integral_distance += error_distance
+        derivative_distance = error_distance - last_error_distance
+        last_error_distance = error_distance
+
+        pid_output = (kP_distance * error_distance +
+                      kI_distance * integral_distance +
+                      kD_distance * derivative_distance)
+
+        # Clamp the output to the maximum allowed velocity
+        pid_output = max(-max_velocity_percent, min(max_velocity_percent, pid_output))
+        
+        # Heading correction using IMU
+        current_heading = Inertial21.rotation()
+        error_heading = target_heading - current_heading
+        heading_correction = kP_heading * error_heading
+
+        # Combine outputs: Add heading correction to the left side and subtract from the right
+        left_output = pid_output + heading_correction
+        right_output = pid_output - heading_correction
+
+        # Clamp motor outputs to the maximum allowed velocity
+        left_output = max(-max_velocity_percent, min(max_velocity_percent, left_output))
+        right_output = max(-max_velocity_percent, min(max_velocity_percent, right_output))
+
+        # Set motor velocities
+        LeftMotors.set_velocity(left_output, PERCENT)
+        RightMotors.set_velocity(right_output, PERCENT)
+        Left_Front.set_velocity(left_output, PERCENT)
+        Right_front.set_velocity(right_output, PERCENT)
+
+        # Spin motors
+        LeftMotors.spin(REVERSE)
+        Left_Front.spin(REVERSE)
+        RightMotors.spin(FORWARD)
+        Right_front.spin(FORWARD)
+
+    # Stop motors when the movement is complete
+    RightMotors.stop()
+    Right_front.stop()
+    LeftMotors.stop()
+    Left_Front.stop()
+
+
+
+def pid_turn(target_heading, max_velocity, momentum):
+    global Inertial21, RightMotors, Right_front, LeftMotors, Left_Front
+    
+    Inertial21.set_rotation(0, DEGREES)  # Reset IMU
+
+    while True:
+        # Calculate remaining degrees to turn
+        error = target_heading - Inertial21.rotation(DEGREES)
+
+        # Stop if within momentum threshold
+        if abs(error) < momentum:
+            break
+
+        # Gradually reduce speed as robot approaches target
+        speed = max_velocity * (abs(error) / max(abs(target_heading), 1))  # Prevent division by zero
+        speed = max(speed, 5)  # Ensure a small minimum speed to prevent stalling
+        controller_1.screen.clear_screen()
+        wait(0.02, SECONDS)
+        controller_1.screen.set_cursor(1,1)
+        controller_1.screen.print(error)
+
+        # Apply speed to motors
+        RightMotors.set_velocity(speed, PERCENT)
+        Right_front.set_velocity(speed, PERCENT)
+        LeftMotors.set_velocity(speed, PERCENT)
+        Left_Front.set_velocity(speed, PERCENT)
+
+        # Set direction
+        if error > 0:
+            RightMotors.spin(REVERSE)
+            Right_front.spin(REVERSE)
+            LeftMotors.spin(FORWARD)
+            Left_Front.spin(FORWARD)
+        else:
+            RightMotors.spin(FORWARD)
+            Right_front.spin(FORWARD)
+            LeftMotors.spin(REVERSE)
+            Left_Front.spin(REVERSE)
+
+        wait(10, MSEC)  # Small delay for smooth updates
+
+    # Stop motors after reaching target
+    RightMotors.stop()
+    LeftMotors.stop()
+    Right_front.stop()
+    Left_Front.stop()
+
+
+
 def vexcode_auton_function():
     # Start the autonomous control tasks
     
@@ -591,228 +743,6 @@ ws3 = Thread( when_started3 )
 ws4 = Thread( when_started4 )
 ws5 = Thread( when_started5 )
 
-import math
-
-
-
-# PID Constants for Distance Control
-kP_distance = 2.0
-kI_distance = 0.0  
-kD_distance = 0.5
-
-# PID Constant for Heading Correction
-kP_heading = 0.1
-
-def pid_drive(distance_inches, max_velocity_percent, timeout=20.0):
-
-    LeftMotors.set_stopping(BRAKE)
-    RightMotors.set_stopping(BRAKE)
-    Left_Front.set_stopping(BRAKE)
-    Right_front.set_stopping(BRAKE)
-    """
-    Drives the robot forward for a given distance (in inches) with PID control 
-    and IMU-based heading correction.
-
-    Args:
-        distance_inches (float): Target distance to move (in inches).
-        max_velocity_percent (float): Maximum motor speed (0-100%).
-        timeout (float): Maximum time allowed for movement (seconds).
-    """
-
-    # Reset motor encoders
-    LeftMotors.set_position(0, DEGREES)
-    RightMotors.set_position(0, DEGREES)
-    Left_Front.set_position(0, DEGREES)
-    Right_front.set_position(0, DEGREES)
-
-    # Capture the starting heading from the IMU
-    target_heading = Inertial21.rotation()
-
-
-    integral_distance = 0.0
-    last_error_distance = 0.0
-    start_time = brain.timer.time(SECONDS)  # Use Brain's timer
-
-    while True:
-
-        # Calculate error in distance (in encoder ticks)
-        error_distance = distance_inches - (((RightMotors.position(DEGREES)/360)*math.pi*2.75)+((Right_front.position(DEGREES)/360)*math.pi*2.75)+((LeftMotors.position(DEGREES)/360)*math.pi*2.75)+((Left_Front.position(DEGREES)/360)*math.pi*2.75)/4)
-
-        # Break if we're within tolerance or timeout has been exceeded
-        if abs(error_distance) < 1 or (brain.timer.time(SECONDS) - start_time) > timeout:
-            break
-
-        # Distance PID calculations
-        integral_distance += error_distance
-        derivative_distance = error_distance - last_error_distance
-        last_error_distance = error_distance
-
-        pid_output = (kP_distance * error_distance +
-                      kI_distance * integral_distance +
-                      kD_distance * derivative_distance)
-
-        # Clamp the output to the maximum allowed velocity
-        pid_output = max(-max_velocity_percent, min(max_velocity_percent, pid_output))
-        
-        # Heading correction using IMU
-        current_heading = Inertial21.rotation()
-        error_heading = target_heading - current_heading
-        heading_correction = kP_heading * error_heading
-
-        # Combine outputs: Add heading correction to the left side and subtract from the right
-        left_output = pid_output + heading_correction
-        right_output = pid_output - heading_correction
-
-        # Clamp motor outputs to the maximum allowed velocity
-        left_output = max(-max_velocity_percent, min(max_velocity_percent, left_output))
-        right_output = max(-max_velocity_percent, min(max_velocity_percent, right_output))
-
-        # Set motor velocities
-        LeftMotors.set_velocity(left_output, PERCENT)
-        RightMotors.set_velocity(right_output, PERCENT)
-        Left_Front.set_velocity(left_output, PERCENT)
-        Right_front.set_velocity(right_output, PERCENT)
-
-        # Spin motors
-        LeftMotors.spin(REVERSE)
-        Left_Front.spin(REVERSE)
-        RightMotors.spin(FORWARD)
-        Right_front.spin(FORWARD)
-
-    # Stop motors when the movement is complete
-    RightMotors.stop()
-    Right_front.stop()
-    LeftMotors.stop()
-    Left_Front.stop()
-
-
-
-'''from MAIN_GB.main1 import *'''
-
-# PID Turn Function
-
-def pid_turn(target_angle, max_speed, timeout=3):
-    Kp = 0.6   # Proportional Gain
-    Ki = 0.0 # Integral Gain
-    Kd = 2.7  # Derivative Gain
-    '''Kp = 0.6   # Proportional Gain
-    Ki = 0.0 # Integral Gain
-    Kd = 2.7  # Derivative Gain'''
-
-    integral = 0
-    previous_error = 0
-    threshold = 0.1  # Acceptable error in degrees
-    start_time = brain.timer.time(SECONDS)
-
-    # Reset IMU Heading
-    Inertial21.set_rotation(0, DEGREES)
-    
-    while True:
-        # Get current heading
-        current_angle = Inertial21.rotation(DEGREES)
-        error = target_angle - current_angle
-
-        # If within acceptable range, stop
-        if abs(error) < threshold or (brain.timer.time(SECONDS) - start_time) > timeout:
-            break
-        controller_1.screen.set_cursor(1,1)
-        wait(0.2,SECONDS)
-        controller_1.screen.clear_screen()
-        controller_1.screen.print(error)
-
-
-        # PID Calculations
-        integral += error
-        derivative = error - previous_error
-        previous_error = error
-
-        power = -(Kp * error) + (Ki * integral) + (Kd * derivative)
-        power = max(min(power, max_speed), -max_speed)  # Limit speed
-
-
-        # Apply power to motors for turning
-        LeftMotors.set_velocity(power, PERCENT)
-        RightMotors.set_velocity(power, PERCENT)
-        Left_Front.set_velocity(power, PERCENT)
-        Right_front.set_velocity(power, PERCENT)
-        
-
-        LeftMotors.spin(FORWARD)
-        RightMotors.spin(FORWARD)
-        Left_Front.spin(FORWARD)
-        Right_front.spin(FORWARD)
-
-    # Stop motors after turn
-    LeftMotors.stop()
-    RightMotors.stop()
-    Left_Front.stop()
-    Right_front.stop()
-
-
-
-
-# PID Turn Function
-'''def pid_turn(target_angle, max_speed, timeout=3):
-    Kp = 0.7   # Proportional Gain
-    Ki = 0.0   # Integral Gain
-    Kd = 4     # Derivative Gain
-
-    integral = 0
-    previous_error = 0
-    threshold = 1.5  # Acceptable error in degrees
-    start_time = brain.timer.time(SECONDS)
-
-    # Reset IMU Heading
-    Inertial21.set_rotation(0, DEGREES)
-
-    while True:
-        # Get current heading
-        current_angle = Inertial21.rotation(DEGREES)
-        error = target_angle - current_angle
-
-        # Normalize the error to the shortest turn direction (-180 to 180 range)
-        error = (error + 180) % 360 - 180
-
-        # If within acceptable range, stop
-        if abs(error) < threshold or (brain.timer.time(SECONDS) - start_time) > timeout:
-            break
-
- 
-
-        # PID Calculations
-        integral += error
-        derivative = error - previous_error
-        previous_error = error
-
-        power = -(Kp * error) + (Ki * integral) + (Kd * derivative)
-        power = max(min(power, max_speed), -max_speed)  # Limit speed
-
-        # Determine direction automatically
-        if max_speed > 0:  # Clockwise (right turn)
-            LeftMotors.set_velocity(power, PERCENT)
-            Left_Front.set_velocity(power, PERCENT)
-            RightMotors.set_velocity(power, PERCENT)  # Reverse right side
-            Right_front.set_velocity(power, PERCENT)
-        else:  # Counterclockwise (left turn)
-            LeftMotors.set_velocity(-power, PERCENT)  # Reverse left side
-            Left_Front.set_velocity(-power, PERCENT)
-            RightMotors.set_velocity(-power, PERCENT)  
-            Right_front.set_velocity(-power, PERCENT)
-
-        # Spin motors
-        LeftMotors.spin(FORWARD)
-        Left_Front.spin(FORWARD)
-        RightMotors.spin(FORWARD)
-        Right_front.spin(FORWARD)
-
-    # Stop motors after turn
-    LeftMotors.stop()
-    RightMotors.stop()
-    Left_Front.stop()
-    Right_front.stop()'''
-
-
-
 
 
 def onauton_autonomous_0():
@@ -823,11 +753,9 @@ def onauton_autonomous_0():
     while Inertial21.is_calibrating():
         sleep(50)
     stop_initialize.broadcast()
+    pid_turn(90, 60, 0)
 
- 
-    pid_drive(24, 70)
     
-    pid_turn(180,50)
     
     '''Forward_PID_Distance_Max_Speed(48,-60)'''
 

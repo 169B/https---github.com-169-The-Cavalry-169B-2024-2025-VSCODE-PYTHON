@@ -59,3 +59,4 @@ def when_started5():
         wait(200, MSEC)
 
     update_auto_display()  # Show first selection'''
+
