@@ -10,11 +10,17 @@ def onauton_autonomous_0():
         sleep(50)
     stop_initialize.broadcast()
     wait(0.5, SECONDS)
-    pid_turn(180, 100, 0)
+    pid_turn(180, 100)
     wait(0.5, SECONDS)
-    pid_turn(180, 100, 0)
+    pid_turn(180, 100)
     wait(0.5, SECONDS)
-    pid_turn(90, 100, 0)
+    pid_turn(90, 100)
+    wait(0.5, SECONDS)
+    pid_turn(180, 100)
+    wait(0.5, SECONDS)
+    pid_turn(180, 100)
+    wait(0.5, SECONDS)
+    pid_turn(90, 100)
 
     '''pid_drive(24, 60)'''
 

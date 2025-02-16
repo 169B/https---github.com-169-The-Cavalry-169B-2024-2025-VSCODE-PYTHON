@@ -653,21 +653,20 @@ def pid_drive(distance_inches, max_velocity_percent, timeout=20.0):
     Right_front.stop()
     Left_Front.stop()'''
 
-def pid_turn(target_heading, max_velocity, momentum):
+
+def pid_turn(target_heading, max_velocity):
     global Inertial21, RightMotors, Right_front, LeftMotors, Left_Front
     
-    # PID Constants (Adjusted for smoother turn)
-    Kp = 0.28  # Slightly reduced for smoother response
-    Ki = 0.0001  # Very low integral to prevent windup
-    Kd = 0.4  # Reduced derivative gain to minimize oscillation
+    # PID Constants (Adjusted for faster turns)
+    Kp = 0.54  # Increased proportional gain by 20% for faster response
+    Kd = 0.25  # Derivative gain (kept the same for stability)
 
     # Get current heading (DO NOT RESET IMU)
     start_heading = Inertial21.rotation(DEGREES)
-    target = start_heading + (target_heading - 2)  # Adjust for relative turning
+    target = start_heading + (target_heading - 5)  # Adjust for relative turning
 
     # Initialize PID variables
     prev_error = 0
-    integral = 0
     import time
     start_time = time.time()  # Timeout start time
 
@@ -675,34 +674,26 @@ def pid_turn(target_heading, max_velocity, momentum):
         # Calculate error (how far from target)
         error = target - Inertial21.rotation(DEGREES)
 
-        # Small buffer to stop oscillations when near target
-        if abs(error) < 0.5:  # Stop if within 0.5 degrees
+        # If the error is small enough, stop
+        if abs(error) < 0.5:  # Close enough threshold for accuracy
             break
 
         # Timeout safety to prevent infinite loops
-        if time.time() - start_time > 5:  # 5-second timeout
+        if time.time() - start_time > 5:  # Timeout after 5 seconds
             break
 
         # PID calculations
-        integral += error  # Accumulate error over time
-        # Prevent integral windup by limiting integral term
-        integral = max(min(integral, 500), -500)
-
         derivative = error - prev_error  # Change in error
         prev_error = error  # Store current error
 
         # Compute PID output
-        speed = (Kp * error) + (Ki * integral) + (Kd * derivative)
+        speed = (Kp * error) + (Kd * derivative)
 
-        # Smooth decay to avoid sharp oscillations
+        # Adaptive speed adjustment to avoid overshooting (lower speed as close to target)
         speed *= max(0.1, 1 - (abs(error) / target_heading) ** 2)
 
-        # Apply oscillation dampener (reduce speed if small corrections)
-        if abs(derivative) < 0.5 and abs(error) > 0.5:
-            speed *= 0.8  # Reduce speed if derivative is small but error remains
-
         # Limit speed to max_velocity and reasonable minimum
-        speed = max(min(speed, max_velocity), 15)  # Lowered min speed to 15% for better precision
+        speed = max(min(speed, max_velocity), 15)  # Minimum speed = 15%
 
         # Apply speed to motors for turning
         if error > 0:  # Turn RIGHT
@@ -726,7 +717,7 @@ def pid_turn(target_heading, max_velocity, momentum):
             LeftMotors.spin(FORWARD)  # Reverse for left turn
             Left_Front.spin(FORWARD)
 
-        wait(10, MSEC)  # Small delay for smooth updates
+        wait(10, MSEC)  # Small delay for smoother updates
 
     # Stop motors after reaching target
     RightMotors.stop()
@@ -734,11 +725,20 @@ def pid_turn(target_heading, max_velocity, momentum):
     Right_front.stop()
     Left_Front.stop()
 
-    # Small delay to let IMU stabilize before next turn
-    wait(100, MSEC)
 
-    # Reset integral after stopping to prevent windup
-    integral = 0
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -806,11 +806,17 @@ def onauton_autonomous_0():
         sleep(50)
     stop_initialize.broadcast()
     wait(0.5, SECONDS)
-    pid_turn(180, 100, 0)
+    pid_turn(180, 100)
     wait(0.5, SECONDS)
-    pid_turn(180, 100, 0)
+    pid_turn(180, 100)
     wait(0.5, SECONDS)
-    pid_turn(90, 100, 0)
+    pid_turn(90, 100)
+    wait(0.5, SECONDS)
+    pid_turn(180, 100)
+    wait(0.5, SECONDS)
+    pid_turn(180, 100)
+    wait(0.5, SECONDS)
+    pid_turn(90, 100)
 
     '''pid_drive(24, 60)'''
 
