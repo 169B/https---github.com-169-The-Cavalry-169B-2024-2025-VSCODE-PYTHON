@@ -3,12 +3,12 @@ import math
 
 
 # PID Constants for Distance Control
-kP_distance = 1.2
+kP_distance = 1.0
 kI_distance = 0.0  
 kD_distance = 0.1
 
 # PID Constant for Heading Correction
-kP_heading = 0.1
+kP_heading = 0.05
 
 def pid_drive(distance_inches, max_velocity_percent, timeout=20.0):
 
@@ -46,7 +46,7 @@ def pid_drive(distance_inches, max_velocity_percent, timeout=20.0):
         error_distance = distance_inches - (((RightMotors.position(DEGREES)/360)*math.pi*2.75)+((Right_front.position(DEGREES)/360)*math.pi*2.75)+((LeftMotors.position(DEGREES)/360)*math.pi*2.75)+((Left_Front.position(DEGREES)/360)*math.pi*2.75)/4)
 
         # Break if we're within tolerance or timeout has been exceeded
-        if abs(error_distance) < 1 or (brain.timer.time(SECONDS) - start_time) > timeout:
+        if abs(error_distance) < 2 or (brain.timer.time(SECONDS) - start_time) > timeout:
             break
         controller_1.screen.set_cursor(1,1)
         wait(0.2,SECONDS)

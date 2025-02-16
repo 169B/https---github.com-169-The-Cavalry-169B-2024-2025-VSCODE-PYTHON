@@ -192,10 +192,10 @@ def vexcode_auton_function():
 
 def vexcode_driver_function():
     # Start the driver control tasks
-    '''driver_control_task_0 = Thread( ondriver_drivercontrol_0 )'''
+    driver_control_task_0 = Thread( ondriver_drivercontrol_0 )
     driver_control_task_1 = Thread( ondriver_drivercontrol_1 )
     driver_control_task_2 = Thread( ondriver_drivercontrol_2 )
-    '''driver_control_task_3 = Thread( ondriver_drivercontrol_3 )'''
+    driver_control_task_3 = Thread( ondriver_drivercontrol_3 )
     driver_control_task_4 = Thread( ondriver_drivercontrol_4 )
 
     # wait for the driver control period to end

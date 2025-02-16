@@ -64,28 +64,59 @@ def ondriver_drivercontrol_1():
 
         wait(20, MSEC)
 
-
 def ondriver_drivercontrol_2():
-    global Intake_Control, DOon, intake
+    global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    # CONTROLLER CLAMP CONTROL
+    while True:
+        if controller_1.buttonB.pressing():
+            if DOon:
+                digital_out_b.set(True)
+                DOon = False
+                wait(0.1, SECONDS)
+            else:
+                digital_out_b.set(False)
+                DOon = True
+                wait(0.1, SECONDS)
+            wait(0.2, SECONDS)
+        wait(5, MSEC)
+
+def ondriver_drivercontrol_3():
+    global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    # CONTROLLER SWEEPER CONTROL
+    while True:
+        if controller_1.buttonA.pressing():
+            if DOon2:
+                digital_out_g.set(True)
+                DOon2 = False
+                wait(0.1, SECONDS)
+            else:
+                digital_out_g.set(False)
+                DOon2 = True
+                wait(0.1, SECONDS)
+            wait(0.2, SECONDS)
+        wait(5, MSEC)
+        
+def ondriver_drivercontrol_0():
+    global Intake_Control, DOon, intake, INTAKEF, INTAKER
 
     while True:
         if controller_1.buttonR1.pressing():
             # Toggle intake forward
-            if not DOon:
+            if not INTAKEF:
                 intake.set_velocity(80, PERCENT)
                 intake.spin(FORWARD)
-                DOon = True
+                INTAKEF = True
             else:
                 intake.stop()
-                DOon = False
+                INTAKEF = False
 
         elif controller_1.buttonR2.pressing():
             # Toggle intake backward
-            if DOon:
+            if INTAKER:
                 intake.set_velocity(80, PERCENT)
                 intake.spin(REVERSE)
             else:
                 intake.stop()
-            DOon = False
+            INTAKER = False
 
         wait(5, MSEC)
