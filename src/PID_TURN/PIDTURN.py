@@ -90,8 +90,8 @@ def pid_turn(target_heading, max_velocity):
     global Inertial21, RightMotors, Right_front, LeftMotors, Left_Front
     
     # PID Constants (Adjusted for faster turns)
-    Kp = 0.58  # Increased proportional gain by 20% for faster response
-    Kd = 0.28  # Derivative gain (kept the same for stability)
+    Kp = 0.65  # Increased proportional gain by 20% for faster response
+    Kd = 0.43  # Derivative gain (kept the same for stability)
 
     # Get current heading (DO NOT RESET IMU)
     start_heading = Inertial21.rotation(DEGREES)
