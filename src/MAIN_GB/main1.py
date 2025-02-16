@@ -83,7 +83,6 @@ intake_backward = Event()
 DOon = False
 INTAKEF = False
 INTAKER = False
-
 LB = False
 DOon2 = False
 Blue = False

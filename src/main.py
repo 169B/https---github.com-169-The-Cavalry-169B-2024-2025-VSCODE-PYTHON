@@ -1,6 +1,6 @@
 import time
 
-'''# Autonomous Mode Options (Formatted for VEX Controller)
+# Autonomous Mode Options (Formatted for VEX Controller)
 auto_modes = [
     "[NO AUTO]",
     "[RED LEFT RING]",
@@ -17,7 +17,7 @@ def update_auto_display():
 
     # Display selected Autonomous Mode with background color (if supported)
     controller_1.screen.set_cursor(1, 1)
-    controller_1.screen.print(f"> {auto_modes[AutoSelect]} <")
+    controller_1.screen.print("> {auto_modes[AutoSelect]} <")
 
     # Display Navigation Instructions with bold styling
     controller_1.screen.set_cursor(2, 1)
@@ -154,7 +154,6 @@ intake_backward = Event()
 DOon = False
 INTAKEF = False
 INTAKER = False
-
 LB = False
 DOon2 = False
 Blue = False
@@ -209,6 +208,35 @@ Turn_Angle = 0
 
 
 
+def draw_speedometer():
+    brain.screen.clear_screen()
+
+    # Draw speedometer outline
+    brain.screen.draw_circle(160, 120, 50)  # Outer circle
+    brain.screen.print(140, 170, "Speed")
+
+    # Get motor speed (0-100%)
+    speed = RightMotors.velocity(PERCENT)
+    
+    # Convert speed to angle (-90° to 90°)
+    angle = -90 + (speed * 1.8)
+
+    # Calculate needle position
+    needle_x = 160 + 40 * math.cos(angle)
+    needle_y = 120 + 40 * math.sin(angle)
+
+    # Draw speedometer needle
+    brain.screen.draw_line(160, 120, needle_x, needle_y)
+
+    # Render updated screen
+    brain.screen.render()
+
+# Main loop
+while True:
+    draw_speedometer()
+    wait(100,MSEC)  # Update every 100ms
+
+
 
 def ondriver_drivercontrol_4():
     global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
@@ -259,6 +287,9 @@ def when_started4():
     intake.set_velocity(80, PERCENT)
     movement = 0
     Intake_Control = True
+    Inertial21.calibrate()
+    while Inertial21.is_calibrating():
+        sleep(50)
 
 def onevent_stop_initialize_0():
     global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
@@ -713,14 +744,15 @@ def onauton_autonomous_0():
     global turn_heading_velocity_momentum, Forward_PID_Distance_Max_Speed, message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
     # GLOBAL FINAL AUTONOMOUS SELECTION
     remote_control_code_enabled = False
-    Inertial21.calibrate()
-    while Inertial21.is_calibrating():
-        sleep(50)
     stop_initialize.broadcast()
+
+
+    
     wait(0.5, SECONDS)
     pid_drive(-50, 80)
     wait(0.5, SECONDS)
     digital_out_b.set(True)
+    intake.spin(FORWARD)
     pid_turn(180, 100)
     wait(0.5, SECONDS)
     pid_drive(-50, 60)

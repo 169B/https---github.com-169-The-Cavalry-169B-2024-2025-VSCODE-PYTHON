@@ -1,6 +1,6 @@
 import time
 
-'''# Autonomous Mode Options (Formatted for VEX Controller)
+# Autonomous Mode Options (Formatted for VEX Controller)
 auto_modes = [
     "[NO AUTO]",
     "[RED LEFT RING]",
@@ -17,7 +17,7 @@ def update_auto_display():
 
     # Display selected Autonomous Mode with background color (if supported)
     controller_1.screen.set_cursor(1, 1)
-    controller_1.screen.print(f"> {auto_modes[AutoSelect]} <")
+    controller_1.screen.print("> {auto_modes[AutoSelect]} <")
 
     # Display Navigation Instructions with bold styling
     controller_1.screen.set_cursor(2, 1)
