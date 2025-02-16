@@ -12,17 +12,17 @@ def onauton_autonomous_0():
     wait(0.5, SECONDS)
     pid_turn(180, 100)
     wait(0.5, SECONDS)
+    pid_drive(50, 60)
+    wait(0.5, SECONDS)
     pid_turn(180, 100)
+    wait(0.5, SECONDS)
+    pid_drive(50, 60)
     wait(0.5, SECONDS)
     pid_turn(90, 100)
     wait(0.5, SECONDS)
-    pid_turn(180, 100)
-    wait(0.5, SECONDS)
-    pid_turn(180, 100)
-    wait(0.5, SECONDS)
-    pid_turn(90, 100)
+   
 
-    '''pid_drive(24, 60)'''
+
 
 
 
