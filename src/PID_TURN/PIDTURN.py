@@ -222,7 +222,7 @@ controller_1.buttonL2.pressed(onevent_controller_1buttonL2_pressed_0)'''
 # add 15ms delay to make sure events are registered correctly.
 wait(15, MSEC)
 
-ws2 = Thread( when_started2 )
-ws3 = Thread( when_started3 )
+'''ws2 = Thread( when_started2 )
+ws3 = Thread( when_started3 )'''
 ws4 = Thread( when_started4 )
 '''ws5 = Thread( when_started5 )'''

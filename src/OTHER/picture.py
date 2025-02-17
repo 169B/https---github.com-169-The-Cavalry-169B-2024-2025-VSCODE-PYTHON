@@ -23,7 +23,3 @@ def draw_speedometer():
     # Render updated screen
     brain.screen.render()
 
-# Main loop
-while True:
-    draw_speedometer()
-    wait(100,MSEC)  # Update every 100ms

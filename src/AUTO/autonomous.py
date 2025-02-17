@@ -1,3 +1,5 @@
+import time
+
 
 
 
@@ -6,18 +8,20 @@ def onauton_autonomous_0():
     # GLOBAL FINAL AUTONOMOUS SELECTION
     remote_control_code_enabled = False
     stop_initialize.broadcast()
+    # AUTO SELECT
+    RED_LEFT_RING()
 
 
-    
-    wait(0.5, SECONDS)
-    pid_drive(-50, 80)
-    wait(0.5, SECONDS)
+
+def RED_LEFT_RING():
+    return
+
+
+    '''pid_drive(-50, 80)
     digital_out_b.set(True)
     intake.spin(FORWARD)
     pid_turn(180, 100)
-    wait(0.5, SECONDS)
-    pid_drive(-50, 60)
-    wait(0.5, SECONDS)
+    wait(0.5, SECONDS)'''
     
    
    

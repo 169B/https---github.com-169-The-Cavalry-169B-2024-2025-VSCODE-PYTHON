@@ -1,17 +1,21 @@
 import math
 
 # Function to limit how fast the output can change (slew rate limiting)
-def slew_rate_limit(current, previous, max_delta=9):
+def slew_rate_limit(current, previous, max_delta=5):
     delta = current - previous
     if abs(delta) > max_delta:
         return previous + max_delta * (1 if delta > 0 else -1)
     return current
 
-def ondriver_drivercontrol_1():
-    global Left_Axis, Right_Axis, previous_left_output, previous_right_output, max_velocity, dead_zone_range
+def cubic_scaling(value):
+    """Applies cubic scaling to joystick input for smoother control."""
+    normalized = value / 100.0
+    return (normalized ** 3) * 100  # Scale back to percentage
 
-    dead_zone_range = 10  # Adjust this value to set the dead zone range
-    max_velocity = 100  # Maximum motor speed (percent)
+def ondriver_drivercontrol_1():
+    global Left_Axis, Right_Axis, previous_left_output, previous_right_output
+
+    max_velocity = 100  # Max motor speed (percent)
 
     # Initialize previous outputs for slew rate limiting
     previous_left_output = 0
@@ -28,22 +32,11 @@ def ondriver_drivercontrol_1():
         Left_Axis = controller_1.axis3.position()
         Right_Axis = controller_1.axis2.position()
 
-        # Apply dead zone filtering
-    
+        # Apply cubic scaling for smoother control
+        desired_left_output = cubic_scaling(Left_Axis)
+        desired_right_output = cubic_scaling(Right_Axis)
 
-        # Normalize inputs and apply cubic scaling for smoother control
-        left_normalized = Left_Axis / 100.0
-        right_normalized = Right_Axis / 100.0
-
-        # Apply cubic scaling
-        left_cubic = left_normalized ** 3
-        right_cubic = right_normalized ** 3
-
-        # Calculate the desired motor outputs
-        desired_left_output = left_cubic * max_velocity
-        desired_right_output = right_cubic * max_velocity
-
-        # Apply slew rate limiting
+        # Apply slew rate limiting to smooth out rapid changes
         left_output = slew_rate_limit(desired_left_output, previous_left_output)
         right_output = slew_rate_limit(desired_right_output, previous_right_output)
 
@@ -55,14 +48,8 @@ def ondriver_drivercontrol_1():
         LeftMotors.set_velocity(left_output, PERCENT)
         Left_Front.set_velocity(left_output, PERCENT)
         RightMotors.set_velocity(right_output, PERCENT)
-        Right_front.set_velocity(right_output, PERCENT)
+        Right_front.set_velocity(right_output,
 
-        LeftMotors.spin(REVERSE)
-        Left_Front.spin(REVERSE)
-        RightMotors.spin(FORWARD)
-        Right_front.spin(FORWARD)
-
-        wait(20, MSEC)
 
 def ondriver_drivercontrol_2():
     global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
@@ -97,26 +84,18 @@ def ondriver_drivercontrol_3():
         wait(5, MSEC)
         
 def ondriver_drivercontrol_0():
-    global Intake_Control, DOon, intake, INTAKEF, INTAKER
-
+    global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    # INTAKE CONTROLLER CONTROL
     while True:
-        if controller_1.buttonR1.pressing():
-            # Toggle intake forward
-            if not INTAKEF:
+        while Intake_Control:
+            if controller_1.buttonR1.pressing():
                 intake.set_velocity(80, PERCENT)
                 intake.spin(FORWARD)
-                INTAKEF = True
-            else:
-                intake.stop()
-                INTAKEF = False
-
-        elif controller_1.buttonR2.pressing():
-            # Toggle intake backward
-            if INTAKER:
+            elif controller_1.buttonR2.pressing():
                 intake.set_velocity(80, PERCENT)
                 intake.spin(REVERSE)
             else:
                 intake.stop()
-            INTAKER = False
+            wait(5, MSEC)
+        
 
-        wait(5, MSEC)

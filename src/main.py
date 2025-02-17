@@ -69,6 +69,11 @@ def when_started5():
         wait(200, MSEC)
 
     update_auto_display()  # Show initial auto mode'''
+
+
+
+
+
 #region VEXcode Generated Robot Configuration
 from vex import *
 '''from DRIVER_FUNCTIONS.drive import ondriver_drivercontrol_0, ondriver_drivercontrol_1, ondriver_drivercontrol_2, ondriver_drivercontrol_3, onauton_autonomous_0, onevent_controller_1axis2Changed_0, onevent_controller_1axis3Changed_0
@@ -208,37 +213,8 @@ Turn_Angle = 0
 
 
 
-def draw_speedometer():
-    brain.screen.clear_screen()
 
-    # Draw speedometer outline
-    brain.screen.draw_circle(160, 120, 50)  # Outer circle
-    brain.screen.print(140, 170, "Speed")
-
-    # Get motor speed (0-100%)
-    speed = RightMotors.velocity(PERCENT)
-    
-    # Convert speed to angle (-90° to 90°)
-    angle = -90 + (speed * 1.8)
-
-    # Calculate needle position
-    needle_x = 160 + 40 * math.cos(angle)
-    needle_y = 120 + 40 * math.sin(angle)
-
-    # Draw speedometer needle
-    brain.screen.draw_line(160, 120, needle_x, needle_y)
-
-    # Render updated screen
-    brain.screen.render()
-
-# Main loop
-while True:
-    draw_speedometer()
-    wait(100,MSEC)  # Update every 100ms
-
-
-
-def ondriver_drivercontrol_4():
+'''def ondriver_drivercontrol_4():
     global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
     # LADY BROWN MACROS AND INIT
     Lady_Brown.spin_to_position(0, DEGREES)
@@ -271,7 +247,60 @@ def ondriver_drivercontrol_4():
                 wait(5, MSEC)
             Lady_Brown.set_stopping(COAST)
             Lady_Brown.stop()
-        wait(5, MSEC)
+        wait(5, MSEC)'''
+
+def ondriver_drivercontrol_4():
+    global rotation_15, Lady_Brown, controller_1
+
+    # LADY BROWN INITIALIZATION
+    Lady_Brown.spin_to_position(0, DEGREES)
+    rotation_15.set_position(300, DEGREES)
+    Lady_Brown.set_timeout(1, SECONDS)
+    
+    while True:
+        # Move down (controller DOWN button)
+        if controller_1.buttonDown.pressing() and rotation_15.position(DEGREES) > 198:
+            Lady_Brown.set_velocity(40, PERCENT)
+            Lady_Brown.set_stopping(COAST)
+            Lady_Brown.spin(FORWARD)
+
+            while rotation_15.position(DEGREES) > 276:
+                wait(5, MSEC)
+
+            Lady_Brown.set_stopping(HOLD)
+            Lady_Brown.stop()
+
+        # Move up (controller UP button)
+        elif controller_1.buttonUp.pressing():
+            Lady_Brown.set_velocity(100, PERCENT)
+            Lady_Brown.set_stopping(COAST)
+            Lady_Brown.spin(FORWARD)
+
+            while rotation_15.position(DEGREES) > 152:
+                wait(5, MSEC)
+
+            Lady_Brown.set_stopping(HOLD)
+            Lady_Brown.stop()
+
+        # Move back (controller LEFT button) with SAFEGUARD
+        elif controller_1.buttonLeft.pressing():
+            Lady_Brown.set_velocity(40, PERCENT)
+            Lady_Brown.set_stopping(COAST)
+            Lady_Brown.spin(REVERSE)
+
+            start_time = time.time()  # Record start time
+            while rotation_15.position(DEGREES) < 300:
+                if time.time() - start_time > 2:  # If movement takes longer than 2 sec
+                    print("⚠️ SAFEGUARD TRIGGERED: Movement timeout!")
+                    break
+                wait(5, MSEC)
+
+            Lady_Brown.set_stopping(COAST)
+            Lady_Brown.stop()
+            rotation_15.set_position(300, DEGREES)
+
+        wait(5, MSEC)  # Reduce CPU usage
+
 
 def when_started4():
     global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
@@ -309,7 +338,7 @@ def onevent_stop_initialize_0():
     Right_front.set_max_torque(100, PERCENT)
     Left_Front.set_max_torque(100, PERCENT)
 
-def when_started2():
+'''def when_started2():
     global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
     while True:
         if Red:
@@ -342,6 +371,68 @@ def when_started3():
                 wait(0.5, SECONDS)
             wait(5, MSEC)
         wait(5, MSEC)
+
+
+def when_started2():
+    global Blue, Red, optical_4, digital_out_e
+
+    # Improved color sensing with debounce
+    def detect_color(target_color):
+        """ Waits until the optical sensor detects the target color reliably. """
+        detection_count = 0  # Counter for consistent readings
+        while detection_count < 5:  # Ensure stable detection before acting
+            if optical_4.color() == target_color and optical_4.is_near_object():
+                detection_count += 1
+            else:
+                detection_count = 0  # Reset counter if inconsistent
+            wait(10, MSEC)
+
+    while True:
+        if Red:  # Sorting RED balls
+            while Red:
+                if optical_4.color() == Color.BLUE and optical_4.is_near_object():
+                    digital_out_e.set(True)  # Activate mechanism
+                    detect_color(Color.RED)  # Wait until next valid red object
+                    digital_out_e.set(False)  # Deactivate mechanism
+                wait(10, MSEC)
+
+        elif Blue:  # Sorting BLUE balls
+            while Blue:
+                if optical_4.color() == Color.RED and optical_4.is_near_object():
+                    digital_out_e.set(True)  # Activate mechanism
+                    detect_color(Color.BLUE)  # Wait until next valid blue object
+                    digital_out_e.set(False)  # Deactivate mechanism
+                wait(10, MSEC)
+
+        wait(10, MSEC)  # Reduce CPU usage
+
+
+def when_started3():
+    global Intake_running, intake
+
+    # Anti-jam system with smart detection
+    def anti_jam():
+        """ Detects intake stall and reverses to clear jams. """
+        jam_timer = 0
+        while Intake_running:
+            if not intake.is_spinning():  # Detects jam if motor is not moving
+                jam_timer += 1
+                if jam_timer > 10:  # If stalled for 10 iterations (~50ms each)
+                    intake.spin(REVERSE)  # Reverse intake
+                    wait(500, MSEC)  # Allow jam clearing
+                    intake.spin(FORWARD)  # Resume normal operation
+                    jam_timer = 0  # Reset jam detection timer
+            else:
+                jam_timer = 0  # Reset if intake moves normally
+            wait(5, MSEC)
+
+    while True:
+        anti_jam()
+        wait(10, MSEC)  # Reduce unnecessary CPU usage'''
+        
+
+
+
 
 
 def Move_In_direction_Degree_Speed(Move_In_direction_Degree_Speed__Degree, Move_In_direction_Degree_Speed__Speed):
@@ -733,10 +824,12 @@ controller_1.buttonL2.pressed(onevent_controller_1buttonL2_pressed_0)'''
 # add 15ms delay to make sure events are registered correctly.
 wait(15, MSEC)
 
-ws2 = Thread( when_started2 )
-ws3 = Thread( when_started3 )
+'''ws2 = Thread( when_started2 )
+ws3 = Thread( when_started3 )'''
 ws4 = Thread( when_started4 )
 '''ws5 = Thread( when_started5 )'''
+import time
+
 
 
 
@@ -745,18 +838,20 @@ def onauton_autonomous_0():
     # GLOBAL FINAL AUTONOMOUS SELECTION
     remote_control_code_enabled = False
     stop_initialize.broadcast()
+    # AUTO SELECT
+    RED_LEFT_RING()
 
 
-    
-    wait(0.5, SECONDS)
-    pid_drive(-50, 80)
-    wait(0.5, SECONDS)
+
+def RED_LEFT_RING():
+    return
+
+
+    '''pid_drive(-50, 80)
     digital_out_b.set(True)
     intake.spin(FORWARD)
     pid_turn(180, 100)
-    wait(0.5, SECONDS)
-    pid_drive(-50, 60)
-    wait(0.5, SECONDS)
+    wait(0.5, SECONDS)'''
     
    
    
@@ -768,17 +863,21 @@ def onauton_autonomous_0():
 import math
 
 # Function to limit how fast the output can change (slew rate limiting)
-def slew_rate_limit(current, previous, max_delta=9):
+def slew_rate_limit(current, previous, max_delta=5):
     delta = current - previous
     if abs(delta) > max_delta:
         return previous + max_delta * (1 if delta > 0 else -1)
     return current
 
-def ondriver_drivercontrol_1():
-    global Left_Axis, Right_Axis, previous_left_output, previous_right_output, max_velocity, dead_zone_range
+def cubic_scaling(value):
+    """Applies cubic scaling to joystick input for smoother control."""
+    normalized = value / 100.0
+    return (normalized ** 3) * 100  # Scale back to percentage
 
-    dead_zone_range = 10  # Adjust this value to set the dead zone range
-    max_velocity = 100  # Maximum motor speed (percent)
+def ondriver_drivercontrol_1():
+    global Left_Axis, Right_Axis, previous_left_output, previous_right_output
+
+    max_velocity = 100  # Max motor speed (percent)
 
     # Initialize previous outputs for slew rate limiting
     previous_left_output = 0
@@ -795,22 +894,11 @@ def ondriver_drivercontrol_1():
         Left_Axis = controller_1.axis3.position()
         Right_Axis = controller_1.axis2.position()
 
-        # Apply dead zone filtering
-    
+        # Apply cubic scaling for smoother control
+        desired_left_output = cubic_scaling(Left_Axis)
+        desired_right_output = cubic_scaling(Right_Axis)
 
-        # Normalize inputs and apply cubic scaling for smoother control
-        left_normalized = Left_Axis / 100.0
-        right_normalized = Right_Axis / 100.0
-
-        # Apply cubic scaling
-        left_cubic = left_normalized ** 3
-        right_cubic = right_normalized ** 3
-
-        # Calculate the desired motor outputs
-        desired_left_output = left_cubic * max_velocity
-        desired_right_output = right_cubic * max_velocity
-
-        # Apply slew rate limiting
+        # Apply slew rate limiting to smooth out rapid changes
         left_output = slew_rate_limit(desired_left_output, previous_left_output)
         right_output = slew_rate_limit(desired_right_output, previous_right_output)
 
@@ -822,14 +910,8 @@ def ondriver_drivercontrol_1():
         LeftMotors.set_velocity(left_output, PERCENT)
         Left_Front.set_velocity(left_output, PERCENT)
         RightMotors.set_velocity(right_output, PERCENT)
-        Right_front.set_velocity(right_output, PERCENT)
+        Right_front.set_velocity(right_output,
 
-        LeftMotors.spin(REVERSE)
-        Left_Front.spin(REVERSE)
-        RightMotors.spin(FORWARD)
-        Right_front.spin(FORWARD)
-
-        wait(20, MSEC)
 
 def ondriver_drivercontrol_2():
     global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
@@ -864,26 +946,140 @@ def ondriver_drivercontrol_3():
         wait(5, MSEC)
         
 def ondriver_drivercontrol_0():
-    global Intake_Control, DOon, intake, INTAKEF, INTAKER
-
+    global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    # INTAKE CONTROLLER CONTROL
     while True:
-        if controller_1.buttonR1.pressing():
-            # Toggle intake forward
-            if not INTAKEF:
+        while Intake_Control:
+            if controller_1.buttonR1.pressing():
                 intake.set_velocity(80, PERCENT)
                 intake.spin(FORWARD)
-                INTAKEF = True
-            else:
-                intake.stop()
-                INTAKEF = False
-
-        elif controller_1.buttonR2.pressing():
-            # Toggle intake backward
-            if INTAKER:
+            elif controller_1.buttonR2.pressing():
                 intake.set_velocity(80, PERCENT)
                 intake.spin(REVERSE)
             else:
                 intake.stop()
-            INTAKER = False
+            wait(5, MSEC)
+        
 
+
+
+def draw_speedometer():
+    brain.screen.clear_screen()
+
+    # Draw speedometer outline
+    brain.screen.draw_circle(160, 120, 50)  # Outer circle
+    brain.screen.print(140, 170, "Speed")
+
+    # Get motor speed (0-100%)
+    speed = RightMotors.velocity(PERCENT)
+    
+    # Convert speed to angle (-90° to 90°)
+    angle = -90 + (speed * 1.8)
+
+    # Calculate needle position
+    needle_x = 160 + 40 * math.cos(angle)
+    needle_y = 120 + 40 * math.sin(angle)
+
+    # Draw speedometer needle
+    brain.screen.draw_line(160, 120, needle_x, needle_y)
+
+    # Render updated screen
+    brain.screen.render()
+
+
+
+'''def when_started2():
+    global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    while True:
+        if Red:
+            while Red:
+                if optical_4.color() == Color.BLUE and optical_4.is_near_object():
+                    digital_out_e.set(True)
+                    while not (optical_4.color() == Color.RED and optical_4.is_near_object()):
+                        wait(5, MSEC)
+                    digital_out_e.set(False)
+                wait(5, MSEC)
+        elif Blue:
+            while Blue:
+                if optical_4.color() == Color.RED and optical_4.is_near_object():
+                    digital_out_e.set(True)
+                    while not (optical_4.color() == Color.BLUE and optical_4.is_near_object()):
+                        wait(5, MSEC)
+                    digital_out_e.set(False)
+                wait(5, MSEC)
+        else:
+            wait(5, MSEC)
+
+
+def when_started3():
+    global message1, forward_move, Back_move, Stop, turn_right, turn, calibrate, stop_initialize, Auto_Stop, turn_left, start_auto, intake_forward, intake_backward, DOon, LB, DOon2, Blue, Red, Intake_Control, Intake_running, myVariable, volocity, Right_Axis, Left_Axis, IntakeStake, Degree, pi, movement, distance1, time1, rot, turn1, LadyBrown_Up, LadyBrown_score, LadyBrown, Right_turn, Left_turn, DriveState, start, Next, dos, tog, error, output, Kp, Ki, Kd, Dellay, Distance_travled, imput, Proportional, integral, derivitive, direction, Previus_error, AutoSelect, X_Start, Y_Start, Y_End, X_End, Angle, Distnce2, Distance2, Turn_Angle, remote_control_code_enabled, vexcode_brain_precision, vexcode_console_precision, vexcode_controller_1_precision
+    # SENSING FOR ANTI-OBSTRUTION - GLOBAL
+    while True:
+        while Intake_running:
+            if not intake.is_spinning():
+                intake.spin(REVERSE)
+                wait(0.5, SECONDS)
+            wait(5, MSEC)
         wait(5, MSEC)
+
+
+def when_started2():
+    global Blue, Red, optical_4, digital_out_e
+
+    # Improved color sensing with debounce
+    def detect_color(target_color):
+        """ Waits until the optical sensor detects the target color reliably. """
+        detection_count = 0  # Counter for consistent readings
+        while detection_count < 5:  # Ensure stable detection before acting
+            if optical_4.color() == target_color and optical_4.is_near_object():
+                detection_count += 1
+            else:
+                detection_count = 0  # Reset counter if inconsistent
+            wait(10, MSEC)
+
+    while True:
+        if Red:  # Sorting RED balls
+            while Red:
+                if optical_4.color() == Color.BLUE and optical_4.is_near_object():
+                    digital_out_e.set(True)  # Activate mechanism
+                    detect_color(Color.RED)  # Wait until next valid red object
+                    digital_out_e.set(False)  # Deactivate mechanism
+                wait(10, MSEC)
+
+        elif Blue:  # Sorting BLUE balls
+            while Blue:
+                if optical_4.color() == Color.RED and optical_4.is_near_object():
+                    digital_out_e.set(True)  # Activate mechanism
+                    detect_color(Color.BLUE)  # Wait until next valid blue object
+                    digital_out_e.set(False)  # Deactivate mechanism
+                wait(10, MSEC)
+
+        wait(10, MSEC)  # Reduce CPU usage
+
+
+def when_started3():
+    global Intake_running, intake
+
+    # Anti-jam system with smart detection
+    def anti_jam():
+        """ Detects intake stall and reverses to clear jams. """
+        jam_timer = 0
+        while Intake_running:
+            if not intake.is_spinning():  # Detects jam if motor is not moving
+                jam_timer += 1
+                if jam_timer > 10:  # If stalled for 10 iterations (~50ms each)
+                    intake.spin(REVERSE)  # Reverse intake
+                    wait(500, MSEC)  # Allow jam clearing
+                    intake.spin(FORWARD)  # Resume normal operation
+                    jam_timer = 0  # Reset jam detection timer
+            else:
+                jam_timer = 0  # Reset if intake moves normally
+            wait(5, MSEC)
+
+    while True:
+        anti_jam()
+        wait(10, MSEC)  # Reduce unnecessary CPU usage'''
+        
+
+
+

@@ -43,7 +43,7 @@ if [ -f src/main.py ]; then
 fi
 
 # Combine all the files into the final main.py
-files=(src/AUTO/autoselect.py src/MAIN_GB/main1.py src/OTHER/picture.py  src/DRIVER_FUNCTIONS/LB.py src/INIT/init.py src/OTHER/testcode.py src/PID_FORWARD/PID.py src/PID_FORWARD/NEWPID.py src/PID_TURN/PIDTURN.py src/AUTO/autonomous.py src/DRIVER_FUNCTIONS/drive.py)
+files=(src/AUTO/autoselect.py src/MAIN_GB/main1.py   src/DRIVER_FUNCTIONS/LB.py src/INIT/init.py src/OTHER/testcode.py src/PID_FORWARD/PID.py src/PID_FORWARD/NEWPID.py src/PID_TURN/PIDTURN.py src/AUTO/autonomous.py src/DRIVER_FUNCTIONS/drive.py src/OTHER/picture.py src/OTHER/testcode.py)
 total_files=${#files[@]}
 counter=0
 
